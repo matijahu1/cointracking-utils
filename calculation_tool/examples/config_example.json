@@ -1,0 +1,10 @@
+{
+    "import_file" : "./calculation_tool/data/CoinTracking_Trade_Table.csv",
+    "export_file" : "./calculation_tool/data/CT-2021-Kraken-ETH_EUR.csv",
+    "data_format" : "CoinTracking",
+    "ct_exchange" : "Kraken",
+    "ct_year" : "2021",    
+    "coin" : "ETH",
+    "decimal_separator": ".",         
+    "date_format": "%Y-%m-%d %H:%M:%S"    
+}
