@@ -1,11 +1,17 @@
+from dataclasses import replace
+from decimal import Decimal
 import sys
-import pandas as pd
+from typing import Any
 from numpy import nan
 
+from common.models import RawRecord
+from dataclasses import replace
+from datetime import datetime, time
+
 class BaseAggregator:
-    def aggregate_lines(self, df: pd.DataFrame) -> pd.DataFrame:
+    def aggregate_lines(self, records: list[RawRecord]) -> list[RawRecord]:
         raise NotImplementedError("Implementation missing")
-    
+
     @staticmethod
     def safe_float(value):
         """Convert to float, return 0.0 if the value is empty or invalid."""
@@ -13,7 +19,7 @@ class BaseAggregator:
             return float(value) if value else 0.0
         except ValueError:
             return 0.0
-        
+
     @staticmethod
     def sum_round(value1, value2, decimals=8):
         """Sum two values and round the result to the specified number of decimals."""
@@ -23,146 +29,173 @@ class BaseAggregator:
         return round(v1 + v2, decimals)
     
     @staticmethod
-    def values_equal(val1, val2):
-        return val1 == val2 or (pd.isna(val1) and pd.isna(val2))
-           
-    @staticmethod
-    def _is_coin_buy(line: pd.Series) -> bool:
+    def values_equal(val1: Any, val2: Any) -> bool:
         """
-        Is this a coin buy?
-        Determines if the transaction is a coin purchase based on the 'Cur.' field.
-        
-        Args:
-            line (pd.Series): The row of data to analyze.
-            
-        Returns:
-            bool: True if the trade indicates the purchase of a coin or stablecoin
+        Compare two values for equality, considering None as equal.
+
+        Works for str, int, float, Decimal, datetime, or None.
         """
-        # Check if 'Cur.' is a coin
-        currency = line.get("Cur.")
-        if currency in ["BTC", "DFI", "ETH", "SOL2", "LUNA2", "LUNA3", "ADA", "KFEE"]:
+        # Both None
+        if val1 is None and val2 is None:
             return True
         
-        # Elif: Check if 'Cur.' is a stablecoin AND 'Cur..1' is Fiat
-        elif currency in ["USDC", "USDT", "DFI", "XRP", "BNB", "BUSD", "KFEE"]:
-            sell_currency = line.get("Cur..1")
-            if sell_currency in ["EUR", "USD"]:
-                return True
-
-        # Default: Return False if none of the conditions are met
-        return False
+        # One is None, the other not
+        if val1 is None or val2 is None:
+            return False
+        
+        # Otherwise, normal equality
+        return val1 == val2
     
     @staticmethod
-    def _set_time(date_value: str, new_time: str) -> str:
-        return date_value[:-8] + new_time
-    
+    def _is_coin_buy(record: RawRecord) -> bool:
+        """
+        A coin buy occurs when a crypto asset is bought in exchange for
+        fiat currency or another asset.
+        """
+
+        crypto_currencies = {
+            "BTC", "ETH", "ADA", "SOL2", "LUNA2", "LUNA3", "DFI", "BNB", "XRP", "KFEE"
+        }
+
+        stablecoins = {"USDC", "USDT", "BUSD"}
+        fiat_currencies = {"EUR", "USD"}
+
+        buy = record.buy_currency
+        sell = record.sell_currency
+
+        # Buying crypto with fiat
+        if buy in crypto_currencies and sell in fiat_currencies:
+            return True
+
+        # Buying crypto with stablecoin
+        if buy in crypto_currencies and sell in stablecoins:
+            return True
+
+        return False
+
+    @staticmethod
+    def _set_time(date_value: datetime, new_time: str) -> datetime:
+        """
+        Replace the time part of a datetime with a given HH:MM:SS value.
+        """
+        hours, minutes, seconds = map(int, new_time.split(":"))
+
+        return datetime(
+            year=date_value.year,
+            month=date_value.month,
+            day=date_value.day,
+            hour=hours,
+            minute=minutes,
+            second=seconds,
+        )
+
+
 class CoinTrackingAggregator(BaseAggregator):
 
-    def _is_aggregation_applicable(self, current_line, next_line):
-        # Prüfen, ob Time und Asset identisch sind
+    def _is_aggregation_applicable(self, current_line: RawRecord, next_line: RawRecord) -> bool:
         if (
-            BaseAggregator.values_equal(current_line["Type"], next_line["Type"]) and 
-            BaseAggregator.values_equal(current_line["Cur."], next_line["Cur."]) and 
-            BaseAggregator.values_equal(current_line["Cur..1"], next_line["Cur..1"]) and 
-            BaseAggregator.values_equal(current_line["Cur..2"], next_line["Cur..2"]) and 
-            BaseAggregator.values_equal(current_line["Exchange"], next_line["Exchange"]) and 
-            BaseAggregator.values_equal(current_line["Group"], next_line["Group"]) and 
-            BaseAggregator.values_equal(current_line["Comment"], next_line["Comment"]) and 
-            BaseAggregator.values_equal(current_line["Date"][:10], next_line["Date"][:10])
+            BaseAggregator.values_equal(current_line.type, next_line.type) and
+            BaseAggregator.values_equal(current_line.buy_currency, next_line.buy_currency) and
+            BaseAggregator.values_equal(current_line.sell_currency, next_line.sell_currency) and
+            BaseAggregator.values_equal(current_line.fee_currency, next_line.fee_currency) and
+            BaseAggregator.values_equal(current_line.exchange, next_line.exchange) and
+            BaseAggregator.values_equal(current_line.group, next_line.group) and
+            BaseAggregator.values_equal(current_line.comment, next_line.comment) and
+            BaseAggregator.values_equal(current_line.date.date(), next_line.date.date())  # nur Datum vergleichen
         ):
             return True
         else:
             return False
-    
-    def _adjust_timestamp(self, line: pd.Series):
-        # Set time for Deposit to 00:00:00
-        if line["Type"] == "Deposit":
-            line["Date"] = BaseAggregator._set_time(line["Date"], "00:00:00")
-            return
-        
-        # Set time for Coin Buy to 00:01:00
-        if line["Type"] == "Trade" and self._is_coin_buy(line):
-            line["Date"] = BaseAggregator._set_time(line["Date"], "00:01:00")
 
-    def _sort_result(self, df: pd.DataFrame) -> pd.DataFrame:
-        # Sortiere nach Datum und setze Index zurück
-        return df.sort_values(by=["Date"]).reset_index(drop=True)
+    def _adjust_timestamp(self, record: RawRecord) -> RawRecord:
+        """
+        Adjust the timestamp of a record based on its business meaning.
 
-    def aggregate_lines(self, df: pd.DataFrame) -> pd.DataFrame:
+        Rules:
+        - Deposits are normalized to 00:00:00
+        - Coin buys are normalized to 00:01:00
+        """
 
-        # Temporary mapping of column names
-        # columns_mapping = {
-        #     "Type": "Type",
-        #     "Buy": "Buy",
-        #     "Cur.": "Cur.",
-        #     "Sell": "Sell",
-        #     "Cur..1": "Cur.",
-        #     "Fee": "Fee",
-        #     "Cur..2": "Cur.",
-        #     "Exchange": "Exchange",
-        #     "Group": "Group",
-        #     "Comment": "Comment",
-        #     "Date": "Date",
-        #     "Tx-ID": "Tx_ID"
-        # }
-        
-        result_table = pd.DataFrame(columns=df.columns)  
-        aggregation_happended = False
-        aggr_buy = 0.00
-        aggr_sell = 0.00
-        aggr_fee  = 0.00
+        # Rule 1: Deposit → 00:00:00
+        if record.type == "Deposit":
+            new_date = BaseAggregator._set_time(record.date, "00:00:00")
+            return replace(record, date=new_date)
 
-        if len(df) <= 1:
-        #    print("Number of input lines <= 1. Nothing to aggregate.") 
-        #    sys.exit(1) 
-            return df
-              
+        # Rule 2: Coin buy → 00:01:00
+        if record.type == "Trade" and self._is_coin_buy(record):
+            new_date = BaseAggregator._set_time(record.date, "00:01:00")
+            return replace(record, date=new_date)
+
+        # Default: no change
+        return record
+
+    def _sort_result(self, records: list[RawRecord]) -> list[RawRecord]:
+        """
+        Sort records chronologically by date.
+        """
+        return sorted(records, key=lambda r: r.date)
+
+    def aggregate_lines(self, records: list[RawRecord]) -> list[RawRecord]:
+        """
+        The aggregation process consolidates multiple transactions of one day (and further criterias) into a single daily entry. 
+        The specific logic for the time adjustment is documented in the `_adjust_timestamp` method.
+        """
+        if len(records) <= 1:
+            return records
+
+        result: list[RawRecord] = []
+
+        aggr_buy = Decimal("0")
+        aggr_sell = Decimal("0")
+        aggr_fee = Decimal("0")
+        aggregation_happened = False
+
         i = 0
-        while i < len(df) - 1:
-            current_line = df.iloc[i]
-            next_line = df.iloc[i + 1]
+        while i < len(records) - 1:
+            current = records[i]
+            next_rec = records[i + 1]
 
-            if self._is_aggregation_applicable(current_line, next_line) == True:
-
-                # Aggregate fields buy, sell, fee
-                aggr_buy += BaseAggregator.safe_float(current_line["Buy"])              
-                aggr_sell += BaseAggregator.safe_float(current_line["Sell"])   
-                aggr_fee  += BaseAggregator.safe_float(current_line["Fee"])    
-
-                aggregation_happended = True
+            if self._is_aggregation_applicable(current, next_rec):
+                aggr_buy += current.buy_amount
+                aggr_sell += current.sell_amount
+                aggr_fee += current.fee_amount
+                aggregation_happened = True
             else:
-                # Wenn nicht (mehr) aggregiert werden kann, speichere die current_line in die result_table 
-                if aggregation_happended == True:
-                    current_line["Buy"] = BaseAggregator.sum_round(current_line["Buy"], aggr_buy)
-                    current_line["Sell"] = BaseAggregator.sum_round(current_line["Sell"], aggr_sell)
-                    current_line["Fee"] = BaseAggregator.sum_round(current_line["Fee"], aggr_fee)
-                    aggr_buy = 0.00
-                    aggr_sell = 0.00
-                    aggr_fee  = 0.00
-                    current_line["Tx-ID"] = nan
+                if aggregation_happened:                    
+                    current = replace(
+                        current,
+                        buy_amount=current.buy_amount + aggr_buy,
+                        sell_amount=current.sell_amount + aggr_sell,
+                        fee_amount=current.fee_amount + aggr_fee,
+                        tx_id=""
+                    )
+
+                    aggr_buy = Decimal("0")
+                    aggr_sell = Decimal("0")
+                    aggr_fee = Decimal("0")
+                    self._adjust_timestamp(current)
                     
-                # Adjust time if this is a coin purchase
-                self._adjust_timestamp(current_line)                
+                result.append(current)
+                aggregation_happened = False
 
-                # Add current_line to result_table
-                result_table = pd.concat([result_table, pd.DataFrame([current_line])], ignore_index=True)
-                aggregation_happended = False
-            
-            # Fortsetzen mit der nächsten Zeile
             i += 1
-        
-        # Add last line
-        if i == len(df) - 1:
-            if aggregation_happended == True: # Prepare next_line
-                next_line["Buy"] =  BaseAggregator.sum_round(next_line["Buy"], aggr_buy)
-                next_line["Sell"] = BaseAggregator.sum_round(next_line["Sell"], aggr_sell)
-                next_line["Fee"] = BaseAggregator.sum_round(next_line["Fee"], aggr_fee)
-                next_line["Tx-ID"] = ""
-            
-            self._adjust_timestamp(next_line)         
-            result_table = pd.concat([result_table, pd.DataFrame([next_line])], ignore_index=True)                
 
-        return self._sort_result(result_table)
+        # letzte Zeile behandeln
+        last = records[-1]
+        if aggregation_happened:
+            last = replace(
+                        last,
+                        buy_amount=last.buy_amount + aggr_buy,
+                        sell_amount=last.sell_amount + aggr_sell,
+                        fee_amount=last.fee_amount + aggr_fee,
+                        tx_id=""
+                    )
+
+        self._adjust_timestamp(last)
+        result.append(last)
+
+        return self._sort_result(result)
+
 
 class AggregatorFactory:
     @staticmethod

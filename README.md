@@ -30,6 +30,17 @@ Both tools process data exported from CoinTracking:
 
 ---
 
+## 🧠 Business Logic & Rules
+To ensure data integrity, this tool follows specific rules for aggregating transactions (e.g. timestamp alignment).
+
+To avoid documentation drift, the rules are documented directly within the source code:
+
+* **Aggregation Rules:** See documentation in [`aggregator.py`](aggregation_tool/aggregator.py)
+
+This ensures that the documentation always matches the current implementation.
+
+---
+
 ## ⚙️ Setup & Installation
 
 ### Project Structure

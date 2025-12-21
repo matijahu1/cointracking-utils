@@ -1,7 +1,11 @@
+import csv
 from decimal import Decimal
-import pandas as pd
+from pathlib import Path
+from typing import List
 
 from common.models import RawRecord
+from common.utils.date_helper import parse_date
+
 
 class DataImporter:
     def __init__(self, config, check_coin=False):
@@ -12,17 +16,62 @@ class DataImporter:
         self.check_coin = check_coin
         self.coin = config.get_coin()
 
-    def load_data(self):                
-        df = pd.read_csv(self.file_name)
+    def load_data(self) -> list[RawRecord]:
+        all_records = self.parse_csv_file(self.file_name)
 
-        # Special filter for CoinTracking data. 
-        if self.data_format == 'CoinTracking':
-            df = df[(df['Exchange'] == self.ct_exchange) & (df['Date'].str.startswith(self.ct_year))]
-            df = df.sort_values(by=["Type", "Cur.", "Cur..1", "Cur..2", "Exchange", "Group", "Comment", "Date"])
-        
-         # Additional filter if check_coin is True
-        if self.check_coin:
-            df = df[(df['Cur.'] == self.coin) | (df['Cur..1'] == self.coin) | (df['Cur..2'] == self.coin)]   
-            
-        df["Comment"] = df["Comment"].fillna("").astype(str)                 
-        return df
+        filtered_records = []
+        for r in all_records:
+            if r.exchange == self.ct_exchange and str(r.date.year) == self.ct_year:
+                if self.check_coin:
+                    if self.coin in (r.buy_currency, r.sell_currency, r.fee_currency):
+                        filtered_records.append(r)
+                else:
+                    filtered_records.append(r)
+
+        return filtered_records
+
+    @staticmethod
+    def parse_csv_file(path: str) -> List[RawRecord]:
+        """
+        Reads CSV and converts data into RawRecord List.
+        Sorts the list.
+        :param path: Path of CSV file
+        """
+        records = []
+        with open(Path(path), newline="", encoding="utf-8-sig") as f:
+            reader = csv.reader(f)
+            header = next(reader)  # Header überspringen
+
+            for row in reader:
+                if not row:
+                    continue
+
+                # Manuelle Zuweisung basierend auf der CoinTracking CSV-Struktur
+                record = RawRecord(
+                    type=row[0],
+                    buy_amount=Decimal(row[1]) if row[1] else Decimal(0),
+                    buy_currency=row[2],
+                    sell_amount=Decimal(row[3]) if row[3] else Decimal(0),
+                    sell_currency=row[4],
+                    fee_amount=Decimal(row[5]) if row[5] else Decimal(0),
+                    fee_currency=row[6],
+                    exchange=row[7],
+                    group=row[8],
+                    comment=row[9],
+                    date=parse_date(row[10]),
+                    tx_id=row[11],
+                )
+                records.append(record)
+
+        records.sort(
+            key=lambda r: (
+                r.type,
+                r.buy_currency,
+                r.sell_currency,
+                r.fee_currency,
+                r.exchange,
+                r.group,
+                r.date,
+            )
+        )
+        return records
