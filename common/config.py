@@ -1,8 +1,7 @@
 import json
 import sys
-from typing import Any
+from typing import Any, Protocol
 
-from typing import Protocol
 
 class ConfigProtocol(Protocol):
     def get_coin(self) -> str: ...
@@ -17,41 +16,41 @@ class Config:
 
     def _load_config(self, config_file):
         try:
-            with open(config_file, 'r') as file:
+            with open(config_file, "r") as file:
                 return json.load(file)
         except FileNotFoundError:
             print(f"Error: Config file '{config_file}' not found. Exiting program.")
-            sys.exit(1) 
+            sys.exit(1)
         except json.JSONDecodeError:
             print(f"Config file '{config_file}' contains invalid JSON.")
-            sys.exit(1) 
-        
+            sys.exit(1)
+
     def get_import_file(self):
         return self.config_data.get("import_file")
-    
-    def get_data_format(self):
-        return self.config_data.get("data_format")
-        
+
+    def get_data_format(self) -> str:
+        return self.config_data.get("data_format", "")
+
     def get_ct_exchange(self):
         return self.config_data.get("ct_exchange")
-    
+
     def get_ct_year(self):
         return self.config_data.get("ct_year")
-    
+
     def get_export_file(self):
         return self.config_data.get("export_file")
-    
+
     def get_coin(self) -> str:
         coin = self.config_data.get("coin")
         if coin is None:
             raise ValueError("Config value 'coin' is required")
         return coin
-    
+
     def get_decimal_separator(self):
         return self.config_data.get("decimal_separator", ".")
 
     def get_date_format(self):
         return self.config_data.get("date_format", "%Y-%m-%d %H:%M:%S")
-    
+
     # def get_aggregate_trades(self):
     #     return self.config_data.get("aggregate_trades")

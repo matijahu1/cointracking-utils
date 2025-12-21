@@ -17,9 +17,11 @@ Mapper = many rows → list of Domain objects
 """
 
 import pandas as pd
+
 from .adapters import rawrecord_from_series, target_record_from_series
-from .config import Config, ConfigProtocol
+from .config import ConfigProtocol
 from .models import RawRecord, TargetRecord
+
 
 def dataframe_to_raw_records(df: pd.DataFrame, cfg: ConfigProtocol) -> list[RawRecord]:
     """
@@ -36,17 +38,21 @@ def dataframe_to_raw_records(df: pd.DataFrame, cfg: ConfigProtocol) -> list[RawR
 
     return records
 
-def dataframe_to_target_records(df: pd.DataFrame, cfg: ConfigProtocol) -> list[TargetRecord]:
+
+def dataframe_to_target_records(
+    df: pd.DataFrame, cfg: ConfigProtocol
+) -> list[TargetRecord]:
     """
     Convert a DataFrame to a list of TargetRecord objects using the adapter.
     """
-    records = []  
+    records = []
 
     for index, row in df.iterrows():
-        record = target_record_from_series(row, cfg)    
+        record = target_record_from_series(row, cfg)
         records.append(record)
 
     return records
+
 
 def normalize_ct_columns(df: pd.DataFrame) -> pd.DataFrame:
     rename_map = {
@@ -59,23 +65,30 @@ def normalize_ct_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.rename(columns=existing)
     return df
 
+
 def target_records_to_dataframe(records: list[TargetRecord]) -> pd.DataFrame:
     rows = []
 
     for r in records:
-        rows.append({
-            "Type": r.type,
-            "Buy": r.buy_amount,
-            "BuyCur": r.buy_currency,
-            "Sell": r.sell_amount,
-            "SellCur": r.sell_currency,
-            "Fee": r.fee_amount,
-            "FeeCur": r.fee_currency,
-            "Exchange": r.exchange,
-            "Group": r.group,
-            "Comment": r.comment or "",
-            "Date": r.date,
-            "Balance": r.balance,
-        })
+        rows.append(
+            {
+                "Type": r.type,
+                "Buy": r.buy_amount,
+                "BuyCur": r.buy_currency,
+                "Sell": r.sell_amount,
+                "SellCur": r.sell_currency,
+                "Fee": r.fee_amount,
+                "FeeCur": r.fee_currency,
+                "Exchange": r.exchange,
+                "Group": r.group,
+                "Comment": r.comment or "",
+                "Date": r.date,
+                "Balance": r.balance,
+            }
+        )
 
     return pd.DataFrame(rows)
+
+
+def raw_records_to_dataframe(records: list[RawRecord]) -> pd.DataFrame:
+    return pd.DataFrame(records)
