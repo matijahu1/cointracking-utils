@@ -31,8 +31,16 @@ class Config:
     def get_data_format(self) -> str:
         return self.config_data.get("data_format", "")
 
-    def get_ct_exchange(self):
-        return self.config_data.get("ct_exchange")
+    def get_ct_exchanges(self) -> list[str]:
+        value = self.config_data.get("ct_exchanges")
+
+        if isinstance(value, list):
+            return value
+
+        if isinstance(value, str) and value:  # Return string as list
+            return [value]
+
+        return []
 
     def get_ct_year(self):
         return self.config_data.get("ct_year")
