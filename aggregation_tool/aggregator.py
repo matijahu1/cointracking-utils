@@ -1,12 +1,10 @@
 from dataclasses import replace
+from datetime import datetime
 from decimal import Decimal
-import sys
 from typing import Any
-from numpy import nan
 
 from common.models import RawRecord
-from dataclasses import replace
-from datetime import datetime, time
+
 
 class BaseAggregator:
     def aggregate_lines(self, records: list[RawRecord]) -> list[RawRecord]:
@@ -27,7 +25,7 @@ class BaseAggregator:
         v1 = BaseAggregator.safe_float(value1)
         v2 = BaseAggregator.safe_float(value2)
         return round(v1 + v2, decimals)
-    
+
     @staticmethod
     def values_equal(val1: Any, val2: Any) -> bool:
         """
@@ -38,14 +36,14 @@ class BaseAggregator:
         # Both None
         if val1 is None and val2 is None:
             return True
-        
+
         # One is None, the other not
         if val1 is None or val2 is None:
             return False
-        
+
         # Otherwise, normal equality
         return val1 == val2
-    
+
     @staticmethod
     def _is_coin_buy(record: RawRecord) -> bool:
         """
@@ -54,7 +52,16 @@ class BaseAggregator:
         """
 
         crypto_currencies = {
-            "BTC", "ETH", "ADA", "SOL2", "LUNA2", "LUNA3", "DFI", "BNB", "XRP", "KFEE"
+            "BTC",
+            "ETH",
+            "ADA",
+            "SOL2",
+            "LUNA2",
+            "LUNA3",
+            "DFI",
+            "BNB",
+            "XRP",
+            "KFEE",
         }
 
         stablecoins = {"USDC", "USDT", "BUSD"}
@@ -91,17 +98,26 @@ class BaseAggregator:
 
 
 class CoinTrackingAggregator(BaseAggregator):
-
-    def _is_aggregation_applicable(self, current_line: RawRecord, next_line: RawRecord) -> bool:
+    def _is_aggregation_applicable(
+        self, current_line: RawRecord, next_line: RawRecord
+    ) -> bool:
         if (
-            BaseAggregator.values_equal(current_line.type, next_line.type) and
-            BaseAggregator.values_equal(current_line.buy_currency, next_line.buy_currency) and
-            BaseAggregator.values_equal(current_line.sell_currency, next_line.sell_currency) and
-            BaseAggregator.values_equal(current_line.fee_currency, next_line.fee_currency) and
-            BaseAggregator.values_equal(current_line.exchange, next_line.exchange) and
-            BaseAggregator.values_equal(current_line.group, next_line.group) and
-            BaseAggregator.values_equal(current_line.comment, next_line.comment) and
-            BaseAggregator.values_equal(current_line.date.date(), next_line.date.date())  # nur Datum vergleichen
+            BaseAggregator.values_equal(current_line.type, next_line.type)
+            and BaseAggregator.values_equal(
+                current_line.buy_currency, next_line.buy_currency
+            )
+            and BaseAggregator.values_equal(
+                current_line.sell_currency, next_line.sell_currency
+            )
+            and BaseAggregator.values_equal(
+                current_line.fee_currency, next_line.fee_currency
+            )
+            and BaseAggregator.values_equal(current_line.exchange, next_line.exchange)
+            and BaseAggregator.values_equal(current_line.group, next_line.group)
+            and BaseAggregator.values_equal(current_line.comment, next_line.comment)
+            and BaseAggregator.values_equal(
+                current_line.date.date(), next_line.date.date()
+            )  # nur Datum vergleichen
         ):
             return True
         else:
@@ -137,7 +153,7 @@ class CoinTrackingAggregator(BaseAggregator):
 
     def aggregate_lines(self, records: list[RawRecord]) -> list[RawRecord]:
         """
-        The aggregation process consolidates multiple transactions of one day (and further criterias) into a single daily entry. 
+        The aggregation process consolidates multiple transactions of one day (and further criterias) into a single daily entry.
         The specific logic for the time adjustment is documented in the `_adjust_timestamp` method.
         """
         if len(records) <= 1:
@@ -161,20 +177,20 @@ class CoinTrackingAggregator(BaseAggregator):
                 aggr_fee += current.fee_amount
                 aggregation_happened = True
             else:
-                if aggregation_happened:                    
+                if aggregation_happened:
                     current = replace(
                         current,
                         buy_amount=current.buy_amount + aggr_buy,
                         sell_amount=current.sell_amount + aggr_sell,
                         fee_amount=current.fee_amount + aggr_fee,
-                        tx_id=""
+                        tx_id="",
                     )
 
                     aggr_buy = Decimal("0")
                     aggr_sell = Decimal("0")
                     aggr_fee = Decimal("0")
                     self._adjust_timestamp(current)
-                    
+
                 result.append(current)
                 aggregation_happened = False
 
@@ -184,12 +200,12 @@ class CoinTrackingAggregator(BaseAggregator):
         last = records[-1]
         if aggregation_happened:
             last = replace(
-                        last,
-                        buy_amount=last.buy_amount + aggr_buy,
-                        sell_amount=last.sell_amount + aggr_sell,
-                        fee_amount=last.fee_amount + aggr_fee,
-                        tx_id=""
-                    )
+                last,
+                buy_amount=last.buy_amount + aggr_buy,
+                sell_amount=last.sell_amount + aggr_sell,
+                fee_amount=last.fee_amount + aggr_fee,
+                tx_id="",
+            )
 
         self._adjust_timestamp(last)
         result.append(last)
@@ -200,7 +216,7 @@ class CoinTrackingAggregator(BaseAggregator):
 class AggregatorFactory:
     @staticmethod
     def get_aggregator(format: str) -> BaseAggregator:
-        if format == 'CoinTracking':
+        if format == "CoinTracking":
             return CoinTrackingAggregator()
         else:
             raise ValueError(f"Unknown format: {format}")

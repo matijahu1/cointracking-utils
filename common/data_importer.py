@@ -11,22 +11,49 @@ class DataImporter:
     def __init__(self, config, check_coin=False):
         self.file_name = config.get_import_file()
         self.data_format = config.get_data_format()
-        self.ct_exchange = config.get_ct_exchange()
+        self.ct_exchanges = config.get_ct_exchanges()
         self.ct_year = config.get_ct_year()
         self.check_coin = check_coin
         self.coin = config.get_coin()
 
-    def load_data(self) -> list[RawRecord]:
-        all_records = self.parse_csv_file(self.file_name)
+    # def load_data(self) -> list[RawRecord]:
+    #     all_records = self.parse_csv_file(self.file_name)
 
-        filtered_records = []
+    #     filtered_records = []
+    #     for r in all_records:
+    #         if r.exchange == self.ct_exchange and str(r.date.year) == self.ct_year:
+    #             if self.check_coin:
+    #                 if self.coin in (r.buy_currency, r.sell_currency, r.fee_currency):
+    #                     filtered_records.append(r)
+    #             else:
+    #                 filtered_records.append(r)
+
+    #     return filtered_records
+    def load_data(self) -> list[RawRecord]:
+        """
+        Load and filter RawRecords from CSV input.
+        Empty config values ("" or []) disable the corresponding filter.
+        """
+        all_records = self.parse_csv_file(self.file_name)
+        filtered_records: list[RawRecord] = []
+
+        exchanges = self.ct_exchanges  # list[str]
+
         for r in all_records:
-            if r.exchange == self.ct_exchange and str(r.date.year) == self.ct_year:
-                if self.check_coin:
-                    if self.coin in (r.buy_currency, r.sell_currency, r.fee_currency):
-                        filtered_records.append(r)
-                else:
-                    filtered_records.append(r)
+            # Exchange filter
+            if exchanges and r.exchange not in exchanges:
+                continue
+
+            # Year filter
+            if self.ct_year and str(r.date.year) != self.ct_year:
+                continue
+
+            # Coin filter
+            if self.check_coin:
+                if self.coin not in (r.buy_currency, r.sell_currency, r.fee_currency):
+                    continue
+
+            filtered_records.append(r)
 
         return filtered_records
 
