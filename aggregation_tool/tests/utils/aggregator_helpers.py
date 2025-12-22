@@ -1,6 +1,7 @@
 from aggregation_tool.aggregator import CoinTrackingAggregator
 from common.data_importer import DataImporter
 from common.models import RawRecord
+from common.utils.helper import sort_raw_records
 
 
 def run_aggregator_test(input_file: str, expected_file: str, config) -> None:
@@ -17,13 +18,10 @@ def run_aggregator_test(input_file: str, expected_file: str, config) -> None:
     input_records = DataImporter.parse_csv_file(input_file)
     expected_records = DataImporter.parse_csv_file(expected_file)
 
-    # Convert to RawRecord
-    # input_records = rows_to_raw_records(input_rows)
-    # expected_records = rows_to_raw_records(expected_rows)
-
     # Run aggregation
     aggregator = CoinTrackingAggregator()
     result_records = aggregator.aggregate_lines(input_records)
+    sort_raw_records(result_records)
 
     # Compare results
     assert len(result_records) == len(expected_records), (

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 from common.models import RawRecord
-from common.utils.date_helper import parse_date
+from common.utils.helper import parse_date, sort_raw_records
 
 
 class DataImporter:
@@ -90,15 +90,6 @@ class DataImporter:
                 )
                 records.append(record)
 
-        records.sort(
-            key=lambda r: (
-                r.type,
-                r.buy_currency,
-                r.sell_currency,
-                r.fee_currency,
-                r.exchange,
-                r.group,
-                r.date,
-            )
-        )
+        sort_raw_records(records)
+
         return records

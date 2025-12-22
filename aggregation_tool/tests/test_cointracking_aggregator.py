@@ -7,28 +7,32 @@ from tests.mocks.mock_config import MockConfig
 
 
 @pytest.fixture
-def mock_config() -> MockConfig:
-    return MockConfig()
+def mock_config(request) -> MockConfig:
+    return MockConfig(**request.param)
 
 
 @pytest.mark.parametrize(
-    "input_file, expected_file",
+    "input_file, expected_file, mock_config",
     [
         (
             "./aggregation_tool/data/CT-test-data1.csv",
             "./aggregation_tool/data/CT-test-data1-exp.csv",
+            {},
         ),
         (
             "./aggregation_tool/data/CT-test-data2.csv",
             "./aggregation_tool/data/CT-test-data2-exp.csv",
+            {},
         ),
         (
             "./aggregation_tool/data/CT-test-data3.csv",
             "./aggregation_tool/data/CT-test-data3-exp.csv",
+            {},
         ),
         (
             "./aggregation_tool/data/CT-test-data4.csv",
             "./aggregation_tool/data/CT-test-data4-exp.csv",
+            {"ct_exchanges": ["Bake", "Bake Staked"]},
         ),
     ],
 )

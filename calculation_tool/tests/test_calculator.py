@@ -32,19 +32,9 @@ def load_expected_data(request: pytest.FixtureRequest, mock_config: MockConfig):
 
 @pytest.fixture
 def mock_config() -> MockConfig:
-    return MockConfig()
+    return MockConfig("ADA")
 
 
-@pytest.mark.parametrize(
-    "load_ct_dataframe, load_expected_data",
-    [
-        (
-            "./calculation_tool/data/test-ADA-1.csv",
-            "./calculation_tool/data/test-ADA-1-exp.csv",
-        )
-    ],
-    indirect=["load_ct_dataframe", "load_expected_data"],
-)
 @pytest.mark.skipif(
     not os.path.exists("./calculation_tool/data/test-ADA-1.csv"),
     reason="Local test data not found. Please place your CSV in /data to run this test.",
