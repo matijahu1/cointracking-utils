@@ -1,68 +1,65 @@
+# from calculation_tool.calculator import Calculator
+# from common.data_importer import DataImporter
+# from common.test_utils.run_tool_test import run_csv_based_tool_test
+# from common.utils.helper import sort_target_records
+
+
+# def test_calculator_csv(input_file, expected_file, mock_config):
+#     run_csv_based_tool_test(
+#         input_file=input_file,
+#         expected_file=expected_file,
+#         run_tool=lambda records: Calculator(mock_config).track_balance(records),
+#         load_input=DataImporter.parse_csv_file,
+#         load_expected=DataImporter.parse_target_csv_file,
+#         sort_result=sort_target_records,
+#     )
+
 import os
 
-import pandas as pd
 import pytest
 
 from calculation_tool.calculator import Calculator
-from common.config import ConfigProtocol
-from common.mappers import (
-    dataframe_to_raw_records,
-    dataframe_to_target_records,
-    normalize_ct_columns,
-)
+from common.data_importer import DataImporter
+from common.test_utils.run_tool_test import run_csv_based_tool_test
+from common.utils.helper import sort_target_records
 from tests.mocks.mock_config import MockConfig
 
 
-@pytest.fixture
-def load_ct_dataframe(request: pytest.FixtureRequest):
-    file_path = request.param
-    df = pd.read_csv(file_path)
-    df = df.sort_values(
-        by=["Type", "Cur.", "Cur..1", "Cur..2", "Exchange", "Group", "Comment", "Date"]
-    )
-    return normalize_ct_columns(df)
-
-
-@pytest.fixture
-def load_expected_data(request: pytest.FixtureRequest, mock_config: MockConfig):
-    file_path = request.param
-    df = pd.read_csv(file_path)
-    return dataframe_to_target_records(df, mock_config)
-
-
-@pytest.fixture
-def mock_config() -> MockConfig:
-    return MockConfig()
-
-
 @pytest.mark.parametrize(
-    "load_ct_dataframe, load_expected_data",
+    "input_file, expected_file, config_params",
     [
         (
             "./calculation_tool/data/test-ADA-1.csv",
             "./calculation_tool/data/test-ADA-1-exp.csv",
-        )
+            {"coin": "ADA"},
+        ),
+        # Example for another test case with different settings:
+        # (
+        #     "./calculation_tool/data/test-BTC-1.csv",
+        #     "./calculation_tool/data/test-BTC-1-exp.csv",
+        #     {"coin": "BTC", "decimal_separator": ","}
+        # ),
     ],
-    indirect=["load_ct_dataframe", "load_expected_data"],
 )
-@pytest.mark.skipif(
-    not os.path.exists("./calculation_tool/data/test-ADA-1.csv"),
-    reason="Local test data not found. Please place your CSV in /data to run this test.",
-)
-def test_csv_data1(
-    load_ct_dataframe: pd.DataFrame,
-    load_expected_data: pd.DataFrame,
-    mock_config: ConfigProtocol,
-):
-    # Load input data and expected data as DataFrames
-    input_ct_data = load_ct_dataframe
+def test_calculator_csv(input_file, expected_file, config_params):
+    """
+    Test the calculator using CSV files and automated record comparison.
+    """
+    # 1. Skip if local test data is missing
+    if not os.path.exists(input_file) or not os.path.exists(expected_file):
+        pytest.skip(f"Test data missing: {input_file} or {expected_file}")
 
-    expected_records = load_expected_data
+    # 2. Create the mock config using dictionary unpacking (**)
+    # This maps 'coin' from the dict to the 'coin' parameter in __init__
+    mock_config = MockConfig(**config_params)
 
-    input_records = dataframe_to_raw_records(input_ct_data, mock_config)
-
-    calculator = Calculator(mock_config)
-    result_records = calculator.track_balance(input_records)
-
-    assert len(result_records) == len(expected_records)
-    assert result_records[0].balance == expected_records[0].balance
+    # 3. Use the generic test runner
+    run_csv_based_tool_test(
+        input_file=input_file,
+        expected_file=expected_file,
+        # Inject the config into the Calculator
+        run_tool=lambda records: Calculator(mock_config).track_balance(records),
+        load_input=DataImporter.parse_csv_file,
+        load_expected=DataImporter.parse_target_csv_file,
+        sort_result=sort_target_records,
+    )
