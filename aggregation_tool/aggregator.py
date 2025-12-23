@@ -7,6 +7,12 @@ from common.models import RawRecord
 
 
 class BaseAggregator:
+    def __init__(self, config=None):
+        """
+        Base constructor to store configuration for all aggregators.
+        """
+        self.config = config
+
     def aggregate_lines(self, records: list[RawRecord]) -> list[RawRecord]:
         raise NotImplementedError("Implementation missing")
 

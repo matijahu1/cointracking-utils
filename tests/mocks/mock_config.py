@@ -1,15 +1,18 @@
+from typing import Optional
+
+
 class MockConfig:
     def __init__(
         self,
         coin: str = "",
         decimal_separator: str = ".",
         date_format: str = "%Y-%m-%d %H:%M:%S",
-        ct_exchanges: list[str] = [],
+        ct_exchanges: Optional[list[str]] = None,
     ):
         self._coin = coin
         self._decimal_separator = decimal_separator
         self._date_format = date_format
-        self._ct_exchanges = ct_exchanges
+        self._ct_exchanges = ct_exchanges or []
 
     def get_coin(self) -> str:
         return self._coin

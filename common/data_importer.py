@@ -1,10 +1,11 @@
-import csv
-from decimal import Decimal
-from pathlib import Path
-from typing import List
-
-from common.models import RawRecord
-from common.utils.helper import parse_date, sort_raw_records
+from common.models import RawRecord, TargetRecord
+from common.utils.csv_helpers import read_ct_csv
+from common.utils.helper import (
+    parse_date,
+    sort_raw_records,
+    sort_target_records,
+    to_decimal,
+)
 
 
 class DataImporter:
@@ -16,19 +17,6 @@ class DataImporter:
         self.check_coin = check_coin
         self.coin = config.get_coin()
 
-    # def load_data(self) -> list[RawRecord]:
-    #     all_records = self.parse_csv_file(self.file_name)
-
-    #     filtered_records = []
-    #     for r in all_records:
-    #         if r.exchange == self.ct_exchange and str(r.date.year) == self.ct_year:
-    #             if self.check_coin:
-    #                 if self.coin in (r.buy_currency, r.sell_currency, r.fee_currency):
-    #                     filtered_records.append(r)
-    #             else:
-    #                 filtered_records.append(r)
-
-    #     return filtered_records
     def load_data(self) -> list[RawRecord]:
         """
         Load and filter RawRecords from CSV input.
@@ -58,38 +46,60 @@ class DataImporter:
         return filtered_records
 
     @staticmethod
-    def parse_csv_file(path: str) -> List[RawRecord]:
+    def parse_csv_file(path: str) -> list[RawRecord]:
         """
-        Reads CSV and converts data into RawRecord List.
-        Sorts the list.
-        :param path: Path of CSV file
+        Reads a CoinTracking CSV file and converts it into a list of RawRecord objects.
+        The list is sorted before being returned.
         """
-        records = []
-        with open(Path(path), newline="", encoding="utf-8-sig") as f:
-            reader = csv.reader(f)
-            header = next(reader)  # Header überspringen
+        rows = read_ct_csv(path)
 
-            for row in reader:
-                if not row:
-                    continue
-
-                # Manuelle Zuweisung basierend auf der CoinTracking CSV-Struktur
-                record = RawRecord(
-                    type=row[0],
-                    buy_amount=Decimal(row[1]) if row[1] else Decimal(0),
-                    buy_currency=row[2],
-                    sell_amount=Decimal(row[3]) if row[3] else Decimal(0),
-                    sell_currency=row[4],
-                    fee_amount=Decimal(row[5]) if row[5] else Decimal(0),
-                    fee_currency=row[6],
-                    exchange=row[7],
-                    group=row[8],
-                    comment=row[9],
-                    date=parse_date(row[10]),
-                    tx_id=row[11],
-                )
-                records.append(record)
+        records = [
+            RawRecord(
+                type=row[0],
+                buy_amount=to_decimal(row[1]),
+                buy_currency=row[2],
+                sell_amount=to_decimal(row[3]),
+                sell_currency=row[4],
+                fee_amount=to_decimal(row[5]),
+                fee_currency=row[6],
+                exchange=row[7],
+                group=row[8],
+                comment=row[9],
+                date=parse_date(row[10]),
+                tx_id=row[11],
+            )
+            for row in rows
+        ]
 
         sort_raw_records(records)
+        return records
 
+    @staticmethod
+    def parse_target_csv_file(path: str) -> list[TargetRecord]:
+        rows = read_ct_csv(path)
+
+        records = []
+        for row in rows:
+            if not row:
+                continue
+
+            record = TargetRecord(
+                type=row[0],
+                buy_amount=to_decimal(row[1]),
+                buy_currency=row[2],
+                sell_amount=to_decimal(row[3]),
+                sell_currency=row[4],
+                fee_amount=to_decimal(row[5]),
+                fee_currency=row[6],
+                exchange=row[7],
+                group=row[8],
+                comment=row[9],
+                date=parse_date(row[10]),
+                balance=to_decimal(row[11]),  # Neu im Target
+                balance_currency=row[12],  # Neu im Target
+            )
+            records.append(record)
+
+        # Sortierung wie gewünscht
+        sort_target_records(records)
         return records
