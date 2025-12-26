@@ -1,5 +1,6 @@
 import json
 import sys
+from pathlib import Path
 from typing import Any, Protocol
 
 
@@ -46,8 +47,12 @@ class Config:
     def get_ct_year(self):
         return self.config_data.get("ct_year")
 
-    def get_export_file(self):
-        return self.config_data.get("export_file")
+    def get_export_file(self) -> Path:
+        """
+        Returns the export file path as a Path object.
+        """
+        path_str = self.config_data.get("export_file", "")
+        return Path(path_str)
 
     def get_coin(self) -> str:
         coin = self.config_data.get("coin")

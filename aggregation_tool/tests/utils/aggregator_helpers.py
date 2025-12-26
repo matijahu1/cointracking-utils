@@ -1,6 +1,6 @@
 from aggregation_tool.aggregator import CoinTrackingAggregator
 from common.data_importer import DataImporter
-from common.models import RawRecord
+from common.models.records import RawRecord
 from common.utils.helper import sort_raw_records
 
 

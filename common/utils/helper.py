@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from common.models import RawRecord, TargetRecord
+from common.models.records import RawRecord, TargetRecord
 
 COINTRACKING_DATE_FORMATS = (
     "%Y-%m-%d %H:%M:%S",  # International / ISO

@@ -1,61 +1,54 @@
 import csv
-import os
-from typing import List
+from dataclasses import astuple
+from pathlib import Path
+from typing import Sequence
 
-from common.models import RawRecord
+from common.models.records import RawRecord, TargetRecord
 
 
 class DataExporter:
-    def __init__(self, config):
-        self.file_name = config.get_export_file()
-
-    def save_data(self, records: List[RawRecord]) -> None:
-        """
-        Persist RawRecord objects to a CSV file in CoinTracking format.
-        Appends to the file if it already exists.
-        """
-
-        file_exists = os.path.isfile(self.file_name)
-
-        with open(self.file_name, mode="a", newline="", encoding="utf-8") as f:
+    def _save(self, path: Path, header: list[str], data: Sequence) -> None:
+        """Internal helper to handle the actual file I/O."""
+        with open(path, "w", newline="", encoding="utf-8-sig") as f:
             writer = csv.writer(f, quoting=csv.QUOTE_ALL)
+            writer.writerow(header)
+            for record in data:
+                writer.writerow(astuple(record))
 
-            # Write header only once
-            if not file_exists:
-                writer.writerow(
-                    [
-                        "Type",
-                        "Buy",
-                        "Cur.",
-                        "Sell",
-                        "Cur.",
-                        "Fee",
-                        "Cur.",
-                        "Exchange",
-                        "Group",
-                        "Comment",
-                        "Date",
-                        "Tx-ID",
-                    ]
-                )
+    def save_raw_data(self, path: Path, records: Sequence[RawRecord]) -> None:
+        header = [
+            "Type",
+            "Buy",
+            "Cur.",
+            "Sell",
+            "Cur.",
+            "Fee",
+            "Cur.",
+            "Exchange",
+            "Group",
+            "Comment",
+            "Date",
+            "Tx-ID",
+        ]
+        self._save(path, header, records)
 
-            for r in records:
-                writer.writerow(
-                    [
-                        r.type,
-                        self._fmt_decimal(r.buy_amount),
-                        r.buy_currency,
-                        self._fmt_decimal(r.sell_amount),
-                        r.sell_currency,
-                        self._fmt_decimal(r.fee_amount),
-                        r.fee_currency,
-                        r.exchange,
-                        r.group,
-                        r.comment or "",
-                        r.date.strftime("%Y-%m-%d %H:%M:%S"),
-                        r.tx_id,
-                    ]
-                )
+    def save_target_data(self, path: Path, records: Sequence[TargetRecord]) -> None:
+        header = [
+            "Type",
+            "Buy",
+            "Cur.",
+            "Sell",
+            "Cur.",
+            "Fee",
+            "Cur.",
+            "Exchange",
+            "Group",
+            "Comment",
+            "Date",
+            "Balance",
+            "BCur",
+        ]
+        self._save(path, header, records)
 
     @staticmethod
     def _fmt_decimal(value):

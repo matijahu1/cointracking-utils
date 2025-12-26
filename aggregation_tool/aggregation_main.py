@@ -11,12 +11,13 @@ class AggregationTool:
         self.aggregator = AggregatorFactory.get_aggregator(
             self.config.get_data_format()
         )
-        self.exporter = DataExporter(self.config)
+        self.exporter = DataExporter()
 
     def run(self):
         records = self.importer.load_data()
         aggregated_records = self.aggregator.aggregate_lines(records)
-        self.exporter.save_data(aggregated_records)
+        path = self.config.get_export_file()
+        self.exporter.save_raw_data(path, aggregated_records)
 
 
 if __name__ == "__main__":

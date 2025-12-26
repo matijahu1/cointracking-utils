@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from common.models import RawRecord
+from common.models.records import RawRecord
 
 
 class BaseAggregator:
