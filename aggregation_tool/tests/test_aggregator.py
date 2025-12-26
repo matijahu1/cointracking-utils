@@ -5,7 +5,7 @@ import pytest
 from aggregation_tool.aggregator import CoinTrackingAggregator
 from common.data_importer import DataImporter
 from common.test_utils.run_tool_test import run_csv_based_tool_test
-from common.utils.helper import sort_raw_records
+from common.utils.helper import sort_records_for_aggregation
 from tests.mocks.mock_config import MockConfig
 
 
@@ -52,5 +52,5 @@ def test_aggregator_csv(input_file, expected_file, config_params):
         ),
         load_input=DataImporter.parse_csv_file,
         load_expected=DataImporter.parse_csv_file,
-        sort_result=sort_raw_records,
+        sort_result=sort_records_for_aggregation,
     )

@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from common.models.records import RawRecord
+from common.utils.helper import sort_records_for_aggregation
 
 
 class BaseAggregator:
@@ -164,6 +165,9 @@ class CoinTrackingAggregator(BaseAggregator):
         """
         if len(records) <= 1:
             return records
+
+        # Ensure data is in the correct order
+        sort_records_for_aggregation(records)
 
         result: list[RawRecord] = []
 

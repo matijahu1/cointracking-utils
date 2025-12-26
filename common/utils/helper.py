@@ -52,15 +52,26 @@ def to_decimal(value: str) -> Decimal:
     return Decimal(value.replace(",", "."))
 
 
-def sort_raw_records(records: list[RawRecord]) -> None:
+def sort_records_for_aggregation(records: list[RawRecord]) -> None:
+    """Sort logic specific to the Aggregation Tool."""
     records.sort(
         key=lambda r: (
+            r.exchange,
+            r.group,
             r.type,
             r.buy_currency,
             r.sell_currency,
             r.fee_currency,
+            r.date,
+        )
+    )
+
+
+def sort_records_for_calculation(records: list[RawRecord]) -> None:
+    """Sort logic specific to the Calculation Tool."""
+    records.sort(
+        key=lambda r: (
             r.exchange,
-            r.group,
             r.date,
         )
     )

@@ -2,6 +2,7 @@ from calculation_tool.calculator import Calculator
 from common.config import Config
 from common.data_exporter import DataExporter
 from common.data_importer import DataImporter
+from common.utils.helper import sort_records_for_calculation
 
 
 class CalculationTool:
@@ -13,6 +14,7 @@ class CalculationTool:
 
     def run(self):
         records = self.importer.load_data()
+        sort_records_for_calculation(records)
         target_records = self.calculator.track_balance(records)
         path = self.config.get_export_file()
         self.exporter.save_target_data(path, target_records)

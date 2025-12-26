@@ -1,7 +1,7 @@
 from aggregation_tool.aggregator import CoinTrackingAggregator
 from common.data_importer import DataImporter
 from common.models.records import RawRecord
-from common.utils.helper import sort_raw_records
+from common.utils.helper import sort_records_for_aggregation
 
 
 def run_aggregator_test(input_file: str, expected_file: str, config) -> None:
@@ -21,7 +21,7 @@ def run_aggregator_test(input_file: str, expected_file: str, config) -> None:
     # Run aggregation
     aggregator = CoinTrackingAggregator()
     result_records = aggregator.aggregate_lines(input_records)
-    sort_raw_records(result_records)
+    sort_records_for_aggregation(result_records)
 
     # Compare results
     assert len(result_records) == len(expected_records), (
