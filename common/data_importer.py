@@ -2,7 +2,6 @@ from common.models.records import RawRecord, TargetRecord
 from common.utils.csv_helpers import read_ct_csv
 from common.utils.helper import (
     parse_date,
-    sort_raw_records,
     sort_target_records,
     to_decimal,
 )
@@ -19,7 +18,7 @@ class DataImporter:
 
     def load_data(self) -> list[RawRecord]:
         """
-        Load and filter RawRecords from CSV input.
+        Load and filter RawRecords from CSV input.<br>
         Empty config values ("" or []) disable the corresponding filter.
         """
         all_records = self.parse_csv_file(self.file_name)
@@ -49,7 +48,6 @@ class DataImporter:
     def parse_csv_file(path: str) -> list[RawRecord]:
         """
         Reads a CoinTracking CSV file and converts it into a list of RawRecord objects.
-        The list is sorted before being returned.
         """
         rows = read_ct_csv(path)
 
@@ -70,8 +68,6 @@ class DataImporter:
             )
             for row in rows
         ]
-
-        sort_raw_records(records)
         return records
 
     @staticmethod
