@@ -35,8 +35,8 @@ class Calculator:
                 delta -= record.sell_amount
 
             # Fee side
-            if record.fee_currency == coin:
-                delta -= record.fee_amount
+            # if record.fee_currency == coin:
+            #     delta -= record.fee_amount
 
             # If the coin is not involved at all, skip this record
             if delta == Decimal("0"):
