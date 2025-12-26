@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from common.config import ConfigProtocol
 from common.models.records import RawRecord, TargetRecord
+from common.utils.helper import sort_records_for_calculation
 
 
 class Calculator:
@@ -15,6 +16,9 @@ class Calculator:
         """
         Track the balance of the configured coin over time.
         """
+
+        sort_records_for_calculation(records)
+
         coin = self.config.get_coin()
         balance = Decimal("0")
         result: list[TargetRecord] = []
