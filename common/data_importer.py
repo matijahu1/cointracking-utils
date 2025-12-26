@@ -1,4 +1,4 @@
-from common.models import RawRecord, TargetRecord
+from common.models.records import RawRecord, TargetRecord
 from common.utils.csv_helpers import read_ct_csv
 from common.utils.helper import (
     parse_date,
