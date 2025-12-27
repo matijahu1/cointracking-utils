@@ -64,7 +64,8 @@ class DataImporter:
                 group=row[8],
                 comment=row[9],
                 date=parse_date(row[10]),
-                tx_id=row[11],
+                lpn=row[11]
+                tx_id=row[12],
             )
             for row in rows
         ]
