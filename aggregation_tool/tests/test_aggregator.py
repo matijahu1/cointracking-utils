@@ -32,6 +32,11 @@ from tests.mocks.mock_config import MockConfig
             "./aggregation_tool/data/CT-test-data4-exp.csv",
             {"ct_exchanges": ["Bake", "Bake Staked"]},
         ),
+        (
+            "./aggregation_tool/data/CT-test-data5.csv",
+            "./aggregation_tool/data/CT-test-data5-exp.csv",
+            {"ct_exchanges": ["Kraken"]},
+        ),
     ],
 )
 def test_aggregator_csv(input_file, expected_file, config_params):

@@ -33,7 +33,7 @@ class RawRecord:
             group=row.get("Group") or "",
             comment=row.get("Comment") or "",
             date=datetime.strptime(row["Date"], "%Y-%m-%d %H:%M:%S"),
-            lpn=get("LPN") or "",
+            lpn=row.get("LPN") or "",
             tx_id=row.get("Tx-ID") or "",
         )
 
