@@ -175,6 +175,7 @@ class CoinTrackingAggregator(BaseAggregator):
         aggr_sell = Decimal("0")
         aggr_fee = Decimal("0")
         aggregation_happened = False
+        aggr_count = 1
 
         i = 0
         while i < len(records) - 1:
@@ -186,19 +187,18 @@ class CoinTrackingAggregator(BaseAggregator):
                 aggr_sell += current.sell_amount
                 aggr_fee += current.fee_amount
                 aggregation_happened = True
+                aggr_count += 1
             else:
                 if aggregation_happened:
-                    current = replace(
-                        current,
-                        buy_amount=current.buy_amount + aggr_buy,
-                        sell_amount=current.sell_amount + aggr_sell,
-                        fee_amount=current.fee_amount + aggr_fee,
-                        tx_id="",
+                    # Finalize the current record with aggregated values
+                    current = self._finalize_aggregation(
+                        current, aggr_buy, aggr_sell, aggr_fee, aggr_count
                     )
 
                     aggr_buy = Decimal("0")
                     aggr_sell = Decimal("0")
                     aggr_fee = Decimal("0")
+                    aggr_count = 1
                     self._adjust_timestamp(current)
 
                 result.append(current)
@@ -209,18 +209,36 @@ class CoinTrackingAggregator(BaseAggregator):
         # letzte Zeile behandeln
         last = records[-1]
         if aggregation_happened:
-            last = replace(
-                last,
-                buy_amount=last.buy_amount + aggr_buy,
-                sell_amount=last.sell_amount + aggr_sell,
-                fee_amount=last.fee_amount + aggr_fee,
-                tx_id="",
+            last = self._finalize_aggregation(
+                last, aggr_buy, aggr_sell, aggr_fee, aggr_count
             )
 
         self._adjust_timestamp(last)
         result.append(last)
 
         return self._sort_result(result)
+
+    def _finalize_aggregation(
+        self, base_rec: RawRecord, buy: Decimal, sell: Decimal, fee: Decimal, count: int
+    ) -> RawRecord:
+        """
+        Finalizes the aggregation for a group of records by summing up amounts
+        and using the Tx-ID to show the count of aggregated entries.
+        """
+        # We use replace to create a new instance with the final values
+        final_rec = replace(
+            base_rec,
+            buy_amount=base_rec.buy_amount + buy,
+            sell_amount=base_rec.sell_amount + sell,
+            fee_amount=base_rec.fee_amount + fee,
+            tx_id=f"Aggregated records: {count}",
+            lpn="",
+        )
+
+        # Ensure the timestamp is adjusted according to the tool's rules
+        self._adjust_timestamp(final_rec)
+
+        return final_rec
 
 
 class AggregatorFactory:

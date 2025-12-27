@@ -28,6 +28,7 @@ class DataExporter:
             "Group",
             "Comment",
             "Date",
+            "LPN",
             "Tx-ID",
         ]
         self._save(path, header, records)

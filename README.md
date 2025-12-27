@@ -58,13 +58,33 @@ The utilities are organized into two main modules:
 
 ## 🚀 Execution
 
-Run the tools from the project root using:
+**Run** the tools from the project root using:
 
-**To run the Aggregation Tool:**
+To run the **Aggregation Tool**:
 python -m aggregation_tool.aggregation_main
 
-**To run the Calculation Tool:**
+To run the **Calculation Tool**:
 python -m calculation_tool.calc_main
+
+---
+
+## 🧪 Testing
+
+### Test Data Setup
+For unit tests, anonymized CoinTracking CSV files are provided in the
+`/examples` directory.
+
+To run the unit tests successfully:
+
+1. Create a `/data` subfolder inside the tool directory you want to test
+   (e.g. `aggregation_tool/data/`).
+2. Copy the required CSV test files from `/examples` into the `/data` folder.
+3. Ensure that the filenames match the references defined in the unit tests.
+
+The `/data` directory is intentionally excluded from version control
+and must be created locally.
+
+---
 
 ## ⚖️ Disclaimer
 This tool is designed to work with data exported from CoinTracking. Please note that CoinTracking is not affiliated with, and has not participated in, the development of this tool.

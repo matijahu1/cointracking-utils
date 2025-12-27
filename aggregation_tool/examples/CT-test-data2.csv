@@ -1,0 +1,7 @@
+"Type","Buy","Cur.","Sell","Cur.","Fee","Cur.","Exchange","Group","Comment","Date","LPN","Tx-ID"
+"Trade","0.2","BTC","400","EUR","0.20","EUR","Kraken","Kraken Ledger","","2021-12-27 02:40:00","","Ledger-1"
+"Trade","0.2","BTC","400","EUR","0.20","EUR","Kraken","Kraken Ledger","","2021-12-27 02:46:00","","Ledger-2"
+"Margin Fee","","","0.4","KFEE","0.00000000","KFEE","Kraken","Kraken Rollover","","2022-12-15 19:22:59","","Ledger-3"
+"Margin Fee","","","1.0","KFEE","0.00000000","KFEE","Kraken","Kraken Rollover","","2022-12-15 19:00:56","","Ledger-4"
+"Margin Fee","","","0.1","KFEE","0.00000000","KFEE","Kraken","Kraken Rollover","","2022-12-15 18:56:55","","Ledger-5"
+"Trade","0.3","BTC","600","EUR","0.6","EUR","Kraken","Kraken Ledger","","2021-12-29 02:34:00","","Ledger-6"
