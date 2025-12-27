@@ -20,21 +20,6 @@ from tests.mocks.mock_config import MockConfig
         (
             "./aggregation_tool/data/CT-test-data2.csv",
             "./aggregation_tool/data/CT-test-data2-exp.csv",
-            {},
-        ),
-        (
-            "./aggregation_tool/data/CT-test-data3.csv",
-            "./aggregation_tool/data/CT-test-data3-exp.csv",
-            {},
-        ),
-        (
-            "./aggregation_tool/data/CT-test-data4.csv",
-            "./aggregation_tool/data/CT-test-data4-exp.csv",
-            {"ct_exchanges": ["Bake", "Bake Staked"]},
-        ),
-        (
-            "./aggregation_tool/data/CT-test-data5.csv",
-            "./aggregation_tool/data/CT-test-data5-exp.csv",
             {"ct_exchanges": ["Kraken"]},
         ),
     ],

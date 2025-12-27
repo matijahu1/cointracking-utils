@@ -232,6 +232,7 @@ class CoinTrackingAggregator(BaseAggregator):
             sell_amount=base_rec.sell_amount + sell,
             fee_amount=base_rec.fee_amount + fee,
             tx_id=f"Aggregated records: {count}",
+            lpn="",
         )
 
         # Ensure the timestamp is adjusted according to the tool's rules
