@@ -231,7 +231,8 @@ class CoinTrackingAggregator(BaseAggregator):
             buy_amount=base_rec.buy_amount + buy,
             sell_amount=base_rec.sell_amount + sell,
             fee_amount=base_rec.fee_amount + fee,
-            tx_id=f"Aggregated records: {count}",
+            comment=f"Aggregated records: {count}",
+            tx_id="",
             lpn="",
         )
 
