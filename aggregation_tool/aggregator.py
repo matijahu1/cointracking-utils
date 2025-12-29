@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -171,16 +171,17 @@ class CoinTrackingAggregator(BaseAggregator):
         Adjust the timestamp of a record based on its business meaning.
 
         Rules:
-        - Deposits are normalized to 00:01:00
-        - Coin buys are normalized to 23:55:00
+        - Deposits are set to 00:01:00
+        - Coin buys are set to 23:55:00
+        - Coin sells are set to 23:56:00
+        - Margin Fee: +1 min (except the old time is 23:59)
+        - Margin Profit: -1 min (except the old time is 00:00)
         """
-
-        # Rule 1: Deposit → 00:01:00
+        
         if record.type == "Deposit":
             new_date = BaseAggregator._set_time(record.date, "00:01:00")
             return replace(record, date=new_date)
 
-        # Rule 2: Coin buy → 23:55:00
         if record.type == "Trade": 
             if self._is_coin_buy(record):
                 new_date = BaseAggregator._set_time(record.date, "23:55:00")
@@ -188,6 +189,20 @@ class CoinTrackingAggregator(BaseAggregator):
             if self._is_coin_sell(record):
                 new_date = BaseAggregator._set_time(record.date, "23:56:00")
                 return replace(record, date=new_date)
+            
+        # Margin Fee: +1 Minute (Limit 23:59)
+        if record.type == "Margin Fee":
+            if record.date.hour == 23 and record.date.minute == 59:
+                return record
+            new_date = record.date + timedelta(minutes=1)
+            return replace(record, date=new_date)
+
+        # Margin Profit: -1 Minute (Limit 00:00)
+        if record.type == "Margin Profit":
+            if record.date.hour == 00 and record.date.minute == 00:
+                return record
+            new_date = record.date - timedelta(minutes=1)
+            return replace(record, date=new_date)
 
         # Default: no change
         return record
