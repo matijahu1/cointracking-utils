@@ -195,17 +195,17 @@ class CoinTrackingAggregator(BaseAggregator):
         """
         Adjust the timestamp of a record based on its business meaning.
 
-        Rules:
-        - Margin Fee: +1 min (except the old time is 23:59)
+        Rules:         
         - Margin Profit: 00:01:00 
+        - deactivated: Margin Fee: +1 min (except the old time is 23:59)
         """
                   
         # Margin Fee: +1 Minute (Limit 23:59)
-        if record.type == "Margin Fee":
-            if record.date.hour == 23 and record.date.minute == 59:
-                return record
-            new_date = record.date + timedelta(minutes=1)
-            return replace(record, date=new_date)
+        # if record.type == "Margin Fee":
+        #     if record.date.hour == 23 and record.date.minute == 59:
+        #         return record
+        #     new_date = record.date + timedelta(minutes=1)
+        #     return replace(record, date=new_date)
 
         # Margin Profit: -1 Minute (Limit 00:00)
         if record.type == "Margin Profit":
