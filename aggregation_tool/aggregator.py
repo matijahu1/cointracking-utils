@@ -197,7 +197,7 @@ class CoinTrackingAggregator(BaseAggregator):
 
         Rules:
         - Margin Fee: +1 min (except the old time is 23:59)
-        - Margin Profit: -1 min (except the old time is 00:00)
+        - Margin Profit: 00:01:00 
         """
                   
         # Margin Fee: +1 Minute (Limit 23:59)
@@ -209,9 +209,7 @@ class CoinTrackingAggregator(BaseAggregator):
 
         # Margin Profit: -1 Minute (Limit 00:00)
         if record.type == "Margin Profit":
-            if record.date.hour == 00 and record.date.minute == 00:
-                return record
-            new_date = record.date - timedelta(minutes=1)
+            new_date = BaseAggregator._set_time(record.date, "00:01:00")            
             return replace(record, date=new_date)
 
         # Default: no change
