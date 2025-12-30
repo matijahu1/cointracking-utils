@@ -174,8 +174,6 @@ class CoinTrackingAggregator(BaseAggregator):
         - Deposits are set to 00:01:00
         - Coin buys are set to 23:55:00
         - Coin sells are set to 23:56:00
-        - Margin Fee: +1 min (except the old time is 23:59)
-        - Margin Profit: -1 min (except the old time is 00:00)
         """
         
         if record.type == "Deposit":
@@ -190,6 +188,18 @@ class CoinTrackingAggregator(BaseAggregator):
                 new_date = BaseAggregator._set_time(record.date, "23:56:00")
                 return replace(record, date=new_date)
             
+        # Default: no change
+        return record
+
+    def _adjust_margin_timestamp(self, record: RawRecord) -> RawRecord:
+        """
+        Adjust the timestamp of a record based on its business meaning.
+
+        Rules:
+        - Margin Fee: +1 min (except the old time is 23:59)
+        - Margin Profit: -1 min (except the old time is 00:00)
+        """
+                  
         # Margin Fee: +1 Minute (Limit 23:59)
         if record.type == "Margin Fee":
             if record.date.hour == 23 and record.date.minute == 59:
@@ -206,7 +216,7 @@ class CoinTrackingAggregator(BaseAggregator):
 
         # Default: no change
         return record
-
+    
     def _sort_result(self, records: list[RawRecord]) -> list[RawRecord]:
         """
         Sort records chronologically by date.
@@ -253,8 +263,9 @@ class CoinTrackingAggregator(BaseAggregator):
                     aggr_buy = Decimal("0")
                     aggr_sell = Decimal("0")
                     aggr_fee = Decimal("0")
-                    aggr_count = 1                    
-
+                    aggr_count = 1    
+                                    
+                current = self._adjust_margin_timestamp( current )
                 result.append(current)
                 aggregation_happened = False
 
@@ -267,6 +278,7 @@ class CoinTrackingAggregator(BaseAggregator):
                 last, aggr_buy, aggr_sell, aggr_fee, aggr_count
             )
 
+        last = self._adjust_margin_timestamp( last )
         result.append(last)
 
         return self._sort_result(result)
