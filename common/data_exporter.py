@@ -1,5 +1,6 @@
 import csv
 from dataclasses import astuple
+from decimal import Decimal
 from pathlib import Path
 from typing import Sequence
 
@@ -13,7 +14,19 @@ class DataExporter:
             writer = csv.writer(f, quoting=csv.QUOTE_ALL)
             writer.writerow(header)
             for record in data:
-                writer.writerow(astuple(record))
+                # Konvertiere den Record in ein Tuple und formatiere jedes Element
+                row = [self._format_value(v) for v in astuple(record)]
+                writer.writerow(row)
+
+    def _format_value(self, value):
+        """Helper to decide how to format each field."""
+        if isinstance(value, Decimal):
+            return self._format_decimal(value)
+        if value is None:
+            return ""
+        # Datetime Objekte oder andere Typen werden standardmäßig zu Strings
+        return str(value)
+
 
     def save_raw_data(self, path: Path, records: Sequence[RawRecord]) -> None:
         header = [
@@ -52,7 +65,7 @@ class DataExporter:
         self._save(path, header, records)
 
     @staticmethod
-    def _fmt_decimal(value):
+    def _format_decimal(value):
         """
         Format Decimal values for CSV output.
         Empty or zero values are written as empty strings.
