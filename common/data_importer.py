@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from common.models.records import RawRecord, TargetRecord
 from common.utils.csv_helpers import read_ct_csv
 from common.utils.helper import (
@@ -8,7 +10,7 @@ from common.utils.helper import (
 
 
 class DataImporter:
-    def __init__(self, config, check_coin=False):
+    def __init__(self, config: Dict[str, Any], check_coin=False):
         self.file_name = config.get_import_file()
         self.data_format = config.get_data_format()
         self.ct_exchanges = config.get_ct_exchanges()
