@@ -15,7 +15,7 @@ class AssetLot:
     Represents an opening transaction that is waiting to be closed.
     """
 
-    symbol: str
+    coin: str
     side: PositionSide  # LONG or SHORT
     open_datetime: datetime
     amount: Decimal  # Initial amount of the position
@@ -28,7 +28,7 @@ class AssetLot:
 class PnLResult:
     """Represents a single match between a sale and a purchase lot."""
 
-    symbol: str
+    coin: str
     open_date: datetime
     close_date: datetime
     amount: Decimal
@@ -49,7 +49,7 @@ class OpenLotExport:
     Represents an unclosed position (Long or Short) for CSV export.
     """
 
-    symbol: str
+    coin: str
     side: str  # "LONG" or "SHORT"
     open_datetime: datetime
     remaining_amount: Decimal  # What's still left to close

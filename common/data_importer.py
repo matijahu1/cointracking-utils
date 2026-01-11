@@ -10,12 +10,12 @@ from common.utils.helper import (
 
 
 class DataImporter:
-    def __init__(self, config: Dict[str, Any], check_coin=False):
+    def __init__(self, config: Dict[str, Any], coin_filtering_enabled=False):
         self.file_name = config.get_import_file()
         self.data_format = config.get_data_format()
         self.ct_exchanges = config.get_ct_exchanges()
         self.ct_year = config.get_ct_year()
-        self.check_coin = check_coin
+        self.coin_filtering_enabled = coin_filtering_enabled
         self.coin = config.get_coin()
 
     def load_data(self) -> list[RawRecord]:
@@ -38,7 +38,7 @@ class DataImporter:
                 continue
 
             # Coin filter
-            if self.check_coin:
+            if self.coin_filtering_enabled:
                 if self.coin not in (r.buy_currency, r.sell_currency, r.fee_currency):
                     continue
 

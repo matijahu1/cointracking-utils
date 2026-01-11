@@ -3,7 +3,7 @@
     "export_file" : "./aggregation_tool/data/CT-Export-aggr.csv",
     "aggregate_trades" : true,
     "data_format" : "CoinTracking", 
-    "ct_exchange" : [],
+    "ct_exchanges" : [],
     "ct_year" : "2021",
     "coin" : ""
 }
