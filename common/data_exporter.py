@@ -4,7 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Sequence
 
-from common.models.records import RawRecord, TargetRecord
+from common.models.records import PnLResult, RawRecord, TargetRecord
 
 
 class DataExporter:
@@ -26,7 +26,6 @@ class DataExporter:
             return ""
         # Datetime Objekte oder andere Typen werden standardmäßig zu Strings
         return str(value)
-
 
     def save_raw_data(self, path: Path, records: Sequence[RawRecord]) -> None:
         header = [
@@ -61,6 +60,22 @@ class DataExporter:
             "Date",
             "Balance",
             "BCur",
+        ]
+        self._save(path, header, records)
+
+    def save_pnl_results(self, path: Path, records: Sequence[PnLResult]) -> None:
+        """Saves the PnLResult records to a CSV file matching the dataclass structure."""
+        header = [
+            "Coin",
+            "Side (Long/Short)",
+            "Open Date",
+            "Close Date",
+            "Amount",
+            "Open Price",
+            "Close Price",
+            "Currency",
+            "PnL",
+            "Method",
         ]
         self._save(path, header, records)
 

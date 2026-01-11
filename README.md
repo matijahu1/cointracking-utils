@@ -44,9 +44,10 @@ This ensures that the documentation always matches the current implementation.
 ## ⚙️ Setup & Installation
 
 ### Project Structure
-The utilities are organized into two main modules:
+The utilities are organized into three main modules:
 * `aggregation_tool/`
 * `calculation_tool/`
+* `pnl_tool/`
 
 ### Configuration
 1. **Prepare Data Folders:** Create a `/data` subfolder inside the tool directory you wish to use.
@@ -66,6 +67,8 @@ python -m aggregation_tool.aggregation_main
 To run the **Calculation Tool**:
 python -m calculation_tool.calc_main
 
+To run the **Profit and Loss Tool**:
+python -m pnl_tool.pnl_main
 ---
 
 ## 🧪 Testing

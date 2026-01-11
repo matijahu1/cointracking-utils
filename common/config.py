@@ -55,6 +55,20 @@ class Config:
         path_str = self.config_data.get("export_file", "")
         return Path(path_str)
 
+    def get_pnl_export_file(self) -> Path:
+        """
+        Returns the export file path as a Path object.
+        """
+        path_str = self.config_data.get("export_pnl_file", "")
+        return Path(path_str)
+
+    def get_open_lots_export_file(self) -> Path:
+        """
+        Returns the export file path as a Path object.
+        """
+        path_str = self.config_data.get("export_open_lots_file", "")
+        return Path(path_str)
+
     def get_coin(self) -> str:
         coin = self.config_data.get("coin")
         if coin is None:

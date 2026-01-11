@@ -25,25 +25,6 @@ class AssetLot:
 
 
 @dataclass
-class PnLResult:
-    """Represents a single match between a sale and a purchase lot."""
-
-    coin: str
-    open_date: datetime
-    close_date: datetime
-    amount: Decimal
-    open_price: Decimal
-    close_price: Decimal
-    currency: str
-    pnl: Decimal
-
-    # Potentially a method to convert to CSV-ready list
-    def to_list(self) -> list:
-        # Implementation for the exporter
-        pass
-
-
-@dataclass
 class OpenLotExport:
     """
     Represents an unclosed position (Long or Short) for CSV export.

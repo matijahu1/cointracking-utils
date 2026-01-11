@@ -24,8 +24,8 @@ class PnLTool:
         self.exporter.save_pnl_results(pnl_path, pnl_results)
 
         # 4. Export Open Lots Report
-        open_lots_path = self.config.get_open_lots_export_file()
-        self.exporter.save_open_lots(open_lots_path, open_lots)
+        # open_lots_path = self.config.get_open_lots_export_file()
+        # self.exporter.save_open_lots(open_lots_path, open_lots)
 
 
 if __name__ == "__main__":
