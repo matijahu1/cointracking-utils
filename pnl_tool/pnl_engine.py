@@ -1,7 +1,9 @@
 from decimal import Decimal
 from typing import Dict, List, Tuple
 
-from .pnl_models import AssetLot, OpenLotExport, PnLResult, PositionSide
+from common.models.records import PnLResult
+
+from .pnl_models import AssetLot, OpenLotExport, PositionSide
 
 
 class PnLEngine:
