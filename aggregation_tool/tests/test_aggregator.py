@@ -4,9 +4,9 @@ import pytest
 
 from aggregation_tool.aggregator import CoinTrackingAggregator
 from common.data_importer import DataImporter
+from common.test_utils.mock_config import MockConfig
 from common.test_utils.run_tool_test import run_csv_based_tool_test
 from common.utils.helper import sort_records_for_aggregation
-from tests.mocks.mock_config import MockConfig
 
 
 @pytest.mark.parametrize(

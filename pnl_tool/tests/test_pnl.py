@@ -3,9 +3,9 @@ import os
 import pytest
 
 from common.data_importer import DataImporter
+from common.test_utils.mock_config import MockConfig
 from common.test_utils.run_tool_test import run_csv_based_tool_test
 from pnl_tool.pnl_engine import PnLEngine
-from tests.mocks.mock_config import MockConfig
 
 
 @pytest.mark.parametrize(
