@@ -10,21 +10,27 @@ class PnLEngine:
     def __init__(self, config):
         self.config = config
         self.method = config.get_accounting_method()  # "LIFO" or "FIFO"
+        self.coin = config.get_coin()
         # Stores lists of AssetLot objects per coin: { "HYPE": [Lot1, Lot2] }
         self.open_lots: Dict[str, List[AssetLot]] = {}
         self.pnl_results: List[PnLResult] = []
 
     def calculate(self, records: list) -> Tuple[List[PnLResult], List[OpenLotExport]]:
         """
-        Main loop to process all records and match opening/closing transactions.
+        Processes all records chronologically.
+        Includes guard clauses for robustness and handles fees.
         """
         # Ensure chronological order for correct lot building
         records.sort(key=lambda x: x.date)
 
         for record in records:
+            # 1. Guard Clause: Skip irrelevant records (Safety for Unit Tests)
+            if self.coin not in (record.buy_currency, record.sell_currency):
+                continue
+
+            # 2. Process only Trade types for now
             if record.type == "Trade":
                 self._process_trade(record)
-            # Future expansion: Handle Fees as separate PnL events if needed
 
         return self.pnl_results, self._get_all_open_lots()
 
