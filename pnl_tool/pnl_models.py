@@ -23,6 +23,15 @@ class AssetLot:
     open_price: Decimal  # Price at opening
     currency: str  # e.g., "USDT"
 
+    def __repr__(self):
+        # Create a clean string similar to your record output
+        date_str = self.open_datetime.strftime("%Y-%m-%d %H:%M")
+        return (
+            f"LOT: {date_str} | {self.side.name:5} | "
+            f"Rem: {self.remaining_amount:12.4f} / {self.amount:12.4f} | "
+            f"Price: {self.open_price:10.4f} {self.currency}"
+        )
+
 
 @dataclass
 class OpenLotExport:
