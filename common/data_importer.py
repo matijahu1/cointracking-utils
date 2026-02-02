@@ -66,7 +66,7 @@ class DataImporter:
                 exchange=row[7],
                 group=row[8],
                 comment=row[9],
-                date=parse_date(row[10]),
+                datetime=parse_date(row[10]),
                 lpn=row[11],
                 tx_id=row[12],
             )
@@ -122,8 +122,8 @@ class DataImporter:
                 coin=row[0],
                 # Convert the string back to the Enum
                 side=PositionSide[row[1]],
-                open_date=parse_date(row[2]),
-                close_date=parse_date(row[3]),
+                open_datetime=parse_date(row[2]),
+                close_datetime=parse_date(row[3]),
                 amount=to_decimal(row[4]),
                 open_price=to_decimal(row[5]),
                 close_price=to_decimal(row[6]),
@@ -135,5 +135,5 @@ class DataImporter:
 
         # Sorting for consistent comparison in tests
         # Primary by close date, secondary by open date
-        results.sort(key=lambda x: (x.close_date, x.open_date))
+        results.sort(key=lambda x: (x.close_datetime, x.open_datetime))
         return results

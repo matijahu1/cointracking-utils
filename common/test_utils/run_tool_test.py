@@ -30,5 +30,5 @@ def run_csv_based_tool_test(
 
     # 2. Compare records using your detailed helper
     for i, (res, exp) in enumerate(zip(result_records, expected_records)):
-        # Instead of generic 'assert res == exp', we use your helper:
+        # Instead of generic 'assert res == exp', we use a helper:
         assert_records_equal(res, exp, i)

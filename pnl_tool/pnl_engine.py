@@ -21,7 +21,7 @@ class PnLEngine:
         Includes guard clauses for robustness and handles fees.
         """
         # Ensure chronological order for correct lot building
-        records.sort(key=lambda x: x.date)
+        records.sort(key=lambda x: x.datetime)
 
         for record in records:
             # 1. Guard Clause: Skip irrelevant records (Safety for Unit Tests)
@@ -65,7 +65,7 @@ class PnLEngine:
         # 1. Matching Logic (Closing positions)
         while amount_to_process > 0 and active_lots:
             # Check the side of the oldest/newest lot
-            # In LIFO, we always look at the last element
+            # In LIFO, we always look at the last element (idx -1 means last element)
             idx = -1 if self.method == "LIFO" else 0
             current_lot = active_lots[idx]
 
@@ -81,8 +81,8 @@ class PnLEngine:
                 PnLResult(
                     coin=coin,
                     side=current_lot.side.name,
-                    open_date=current_lot.open_datetime,
-                    close_date=record.date,
+                    open_datetime=current_lot.open_datetime,
+                    close_datetime=record.datetime,
                     amount=match_amount,
                     open_price=current_lot.open_price,
                     close_price=price,
@@ -108,7 +108,7 @@ class PnLEngine:
             new_lot = AssetLot(
                 coin=coin,
                 side=new_side,
-                open_datetime=record.date,
+                open_datetime=record.datetime,
                 amount=amount_to_process,
                 remaining_amount=amount_to_process,
                 open_price=price,

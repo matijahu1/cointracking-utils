@@ -17,7 +17,7 @@ class RawRecord:
     exchange: str
     group: str
     comment: str
-    date: datetime
+    datetime: datetime
     lpn: str
     tx_id: str
 
@@ -34,7 +34,7 @@ class RawRecord:
             exchange=row.get("Exchange") or "",
             group=row.get("Group") or "",
             comment=row.get("Comment") or "",
-            date=datetime.strptime(row["Date"], "%Y-%m-%d %H:%M:%S"),
+            datetimeresult_records=datetime.strptime(row["Date"], "%Y-%m-%d %H:%M:%S"),
             lpn=row.get("LPN") or "",
             tx_id=row.get("Tx-ID") or "",
         )
@@ -73,8 +73,8 @@ class PnLResult:
 
     coin: str
     side: PositionSide  # LONG or SHORT
-    open_date: datetime
-    close_date: datetime
+    open_datetime: datetime
+    close_datetime: datetime
     amount: Decimal
     open_price: Decimal
     close_price: Decimal

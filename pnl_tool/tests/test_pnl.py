@@ -12,8 +12,8 @@ from pnl_tool.pnl_engine import PnLEngine
     "input_file, expected_file, config_params",
     [
         (
-            "./pnl_tool/data/Selected-2026-01-02.csv",
-            "./pnl_tool/data/ADA-pnl-expected.csv",
+            "./pnl_tool/data/FewLines.csv",
+            "./pnl_tool/data/PnL_ADA-EUR-LIFO-Few.csv",
             {"coin": "ADA", "accounting_method": "LIFO"},
         ),
     ],
@@ -43,9 +43,9 @@ def test_pnl_engine_csv(input_file, expected_file, config_params):
         run_tool=run_pnl_logic,
         # Load input as raw records
         load_input=DataImporter.parse_csv_file,
-        # You might need a new method to parse the PnL-specific CSV format
-        # or reuse a generic one if the columns match your PnLResult dataclass
         load_expected=DataImporter.parse_pnl_result_csv_file,
         # Optional: sorting if order in CSV is not guaranteed
-        sort_result=lambda x: sorted(x, key=lambda r: (r.close_date, r.open_date)),
+        sort_result=lambda x: sorted(
+            x, key=lambda r: (r.close_datetime, r.open_datetime)
+        ),
     )
