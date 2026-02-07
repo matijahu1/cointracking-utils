@@ -11,6 +11,7 @@ class PnLEngine:
         self.config = config
         self.method = config.get_accounting_method()  # "LIFO" or "FIFO"
         self.coin = config.get_coin()
+        self.curr = config.get_currency()
         # Stores lists of AssetLot objects per coin: { "HYPE": [Lot1, Lot2] }
         self.open_lots: Dict[str, List[AssetLot]] = {}
         self.pnl_results: List[PnLResult] = []
@@ -24,13 +25,18 @@ class PnLEngine:
         records.sort(key=lambda x: x.datetime)
 
         for record in records:
-            # 1. Guard Clause: Skip irrelevant records (Safety for Unit Tests)
+            # Guard Clause: Skip irrelevant records (Safety for Unit Tests)
             if self.coin not in (record.buy_currency, record.sell_currency):
                 continue
 
-            # 2. Process only Trade types for now
-            if record.type == "Trade":
-                self._process_trade(record)
+            if self.curr not in (record.buy_currency, record.sell_currency):
+                continue
+
+            # Process only Trade type for now
+            if record.type != "Trade":
+                continue
+
+            self._process_trade(record)
 
         return self.pnl_results, self._get_all_open_lots()
 
@@ -38,12 +44,11 @@ class PnLEngine:
         """
         Determines if a trade opens a new lot or closes existing ones.
         """
-        coin = self.config.get_coin()
 
         # Determine the direction of this specific trade
         # If we buy the target coin -> we are potentially closing a SHORT or opening a LONG
         # If we sell the target coin -> we are potentially closing a LONG or opening a SHORT
-        is_buy = record.buy_currency == coin
+        is_buy = record.buy_currency == self.coin
         incoming_amount = record.buy_amount if is_buy else record.sell_amount
         price = (
             record.sell_amount / record.buy_amount
@@ -51,10 +56,10 @@ class PnLEngine:
             else record.buy_amount / record.sell_amount
         )
 
-        if coin not in self.open_lots:
-            self.open_lots[coin] = []
+        if self.coin not in self.open_lots:
+            self.open_lots[self.coin] = []
 
-        active_lots = self.open_lots[coin]
+        active_lots = self.open_lots[self.coin]
 
         # Check if we have opposing lots to close
         # A buy closes SHORT lots; a sell closes LONG lots
@@ -79,7 +84,7 @@ class PnLEngine:
             # Create PnL Result
             self.pnl_results.append(
                 PnLResult(
-                    coin=coin,
+                    coin=self.coin,
                     side=current_lot.side.name,
                     open_datetime=current_lot.open_datetime,
                     close_datetime=record.datetime,
@@ -106,7 +111,7 @@ class PnLEngine:
         if amount_to_process > 0:
             new_side = PositionSide.LONG if is_buy else PositionSide.SHORT
             new_lot = AssetLot(
-                coin=coin,
+                coin=self.coin,
                 side=new_side,
                 open_datetime=record.datetime,
                 amount=amount_to_process,

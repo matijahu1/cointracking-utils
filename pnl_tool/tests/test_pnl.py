@@ -14,7 +14,7 @@ from pnl_tool.pnl_engine import PnLEngine
         (
             "./pnl_tool/data/FewLines.csv",
             "./pnl_tool/data/PnL_ADA-EUR-LIFO-Few.csv",
-            {"coin": "ADA", "accounting_method": "LIFO"},
+            {"coin": "ADA", "currency": "EUR", "accounting_method": "LIFO"},
         ),
     ],
 )
