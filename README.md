@@ -21,6 +21,9 @@ The **Calculation Tool** acts as a diagnostic balance tracker to help you mainta
 * **Audit Trail:** Provides a clear view of how your balances evolved based on your CSV export, making it easier to find missing deposit/withdrawal data.
 * **Future Updates:** Planned features include advanced Profit & Loss (P&L) analysis.
 
+### 3. Profit & Loss Tool
+The **Profit & Loss Tool** calculates realized gains and losses using the LIFO method.
+* ** P&L Tracking:** Determines realized profit and loss across your transaction history.
 ---
 
 ## 📋 Prerequisites
