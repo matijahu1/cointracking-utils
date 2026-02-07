@@ -23,7 +23,7 @@ The **Calculation Tool** acts as a diagnostic balance tracker to help you mainta
 
 ### 3. Profit & Loss Tool
 The **Profit & Loss Tool** calculates realized gains and losses using the LIFO method.
-* ** P&L Tracking:** Determines realized profit and loss across your transaction history.
+* **P&L Tracking:** Determines realized profit and loss across your transaction history.
 ---
 
 ## 📋 Prerequisites
