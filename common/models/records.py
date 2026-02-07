@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
+from pnl_tool.pnl_models import PositionSide
+
 
 @dataclass(frozen=True)
 class RawRecord:
@@ -15,7 +17,7 @@ class RawRecord:
     exchange: str
     group: str
     comment: str
-    date: datetime
+    datetime: datetime
     lpn: str
     tx_id: str
 
@@ -32,7 +34,7 @@ class RawRecord:
             exchange=row.get("Exchange") or "",
             group=row.get("Group") or "",
             comment=row.get("Comment") or "",
-            date=datetime.strptime(row["Date"], "%Y-%m-%d %H:%M:%S"),
+            datetimeresult_records=datetime.strptime(row["Date"], "%Y-%m-%d %H:%M:%S"),
             lpn=row.get("LPN") or "",
             tx_id=row.get("Tx-ID") or "",
         )
@@ -63,3 +65,24 @@ class TargetRecord:
     date: datetime
     balance: Decimal
     balance_currency: str
+
+
+@dataclass
+class PnLResult:
+    """Represents a single match between a sale and a purchase lot."""
+
+    coin: str
+    side: PositionSide  # LONG or SHORT
+    open_datetime: datetime
+    close_datetime: datetime
+    amount: Decimal
+    open_price: Decimal
+    close_price: Decimal
+    currency: str
+    pnl: Decimal
+    method: str
+
+    # Potentially a method to convert to CSV-ready list
+    def to_list(self) -> list:
+        # Implementation for the exporter
+        pass

@@ -1,0 +1,11 @@
+{
+    "import_file": "./pnl_tool/data/input.csv",
+    "export_pnl_file": "./pnl_tool/data/export-PnL.csv",
+    "export_open_lots_file": "./pnl_tool/data/OpenLots.csv",
+    "ct_exchanges": "Kraken",
+    "accounting_method": "LIFO",
+    "coin": "BTC",
+    "currency": "EUR",
+    "decimal_separator": ".",
+    "date_format": "%Y-%m-%d %H:%M:%S"
+}

@@ -1,28 +1,12 @@
-# from calculation_tool.calculator import Calculator
-# from common.data_importer import DataImporter
-# from common.test_utils.run_tool_test import run_csv_based_tool_test
-# from common.utils.helper import sort_target_records
-
-
-# def test_calculator_csv(input_file, expected_file, mock_config):
-#     run_csv_based_tool_test(
-#         input_file=input_file,
-#         expected_file=expected_file,
-#         run_tool=lambda records: Calculator(mock_config).track_balance(records),
-#         load_input=DataImporter.parse_csv_file,
-#         load_expected=DataImporter.parse_target_csv_file,
-#         sort_result=sort_target_records,
-#     )
-
 import os
 
 import pytest
 
 from calculation_tool.calculator import Calculator
 from common.data_importer import DataImporter
+from common.test_utils.mock_config import MockConfig
 from common.test_utils.run_tool_test import run_csv_based_tool_test
 from common.utils.helper import sort_target_records
-from tests.mocks.mock_config import MockConfig
 
 
 @pytest.mark.parametrize(

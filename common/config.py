@@ -6,6 +6,7 @@ from typing import Any, Protocol
 
 class ConfigProtocol(Protocol):
     def get_coin(self) -> str: ...
+    def get_currency(self) -> str: ...
     def get_decimal_separator(self) -> str: ...
     def get_date_format(self) -> str: ...
     def get_ct_exchanges(self) -> list[str]: ...
@@ -54,6 +55,20 @@ class Config:
         path_str = self.config_data.get("export_file", "")
         return Path(path_str)
 
+    def get_pnl_export_file(self) -> Path:
+        """
+        Returns the export file path as a Path object.
+        """
+        path_str = self.config_data.get("export_pnl_file", "")
+        return Path(path_str)
+
+    def get_open_lots_export_file(self) -> Path:
+        """
+        Returns the export file path as a Path object.
+        """
+        path_str = self.config_data.get("export_open_lots_file", "")
+        return Path(path_str)
+
     def get_coin(self) -> str:
         coin = self.config_data.get("coin")
         if coin is None:
@@ -65,6 +80,12 @@ class Config:
 
     def get_date_format(self):
         return self.config_data.get("date_format", "%Y-%m-%d %H:%M:%S")
+
+    def get_accounting_method(self) -> str:
+        return self.config_data.get("accounting_method", "")
+
+    def get_currency(self) -> str:
+        return self.config_data.get("currency", "")
 
     # def get_aggregate_trades(self):
     #     return self.config_data.get("aggregate_trades")

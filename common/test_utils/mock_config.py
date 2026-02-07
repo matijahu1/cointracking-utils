@@ -5,17 +5,24 @@ class MockConfig:
     def __init__(
         self,
         coin: str = "",
+        currency: str = "",
         decimal_separator: str = ".",
         date_format: str = "%Y-%m-%d %H:%M:%S",
         ct_exchanges: Optional[list[str]] = None,
+        accounting_method: str = "",
     ):
         self._coin = coin
+        self._currency = currency
         self._decimal_separator = decimal_separator
         self._date_format = date_format
         self._ct_exchanges = ct_exchanges or []
+        self._accounting_method = accounting_method
 
     def get_coin(self) -> str:
         return self._coin
+
+    def get_currency(self) -> str:
+        return self._currency
 
     def get_decimal_separator(self) -> str:
         return self._decimal_separator
@@ -25,3 +32,6 @@ class MockConfig:
 
     def get_ct_exchanges(self) -> list[str]:
         return self._ct_exchanges
+
+    def get_accounting_method(self) -> str:
+        return self._accounting_method

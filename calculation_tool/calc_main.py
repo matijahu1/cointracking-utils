@@ -7,7 +7,7 @@ from common.data_importer import DataImporter
 class CalculationTool:
     def __init__(self):
         self.config = Config("./calculation_tool/data/config.json")
-        self.importer = DataImporter(self.config, check_coin=True)
+        self.importer = DataImporter(self.config, coin_filtering_enabled=True)
         self.calculator = Calculator(self.config)
         self.exporter = DataExporter()
 
