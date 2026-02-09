@@ -1,7 +1,7 @@
 from decimal import Decimal
 from typing import Dict, List, Tuple
 
-from common.models.records import PnLResult
+from common.models.records import PnLResult, RawRecord
 
 from .pnl_models import AssetLot, OpenLot, PositionSide
 
@@ -59,85 +59,25 @@ class PnLEngine:
             when only opening a new position).
         """
 
-        # Determine the direction of this specific trade
-        # If we buy the target coin -> we are potentially closing a SHORT or opening a LONG
-        # If we sell the target coin -> we are potentially closing a LONG or opening a SHORT
         is_buy = record.buy_currency == self.coin
         incoming_amount = record.buy_amount if is_buy else record.sell_amount
-        price = (
-            record.sell_amount / record.buy_amount
-            if is_buy
-            else record.buy_amount / record.sell_amount
-        )
+        price = self._calculate_current_price(record, is_buy)
 
-        # Sammel-Liste für diesen Aufruf initialisieren
-        local_pnl_results: list[PnLResult] = []
-
+        # Referenz auf die OpenLots des Coins holen
         if self.coin not in self.open_lots:
             self.open_lots[self.coin] = []
-
         active_lots = self.open_lots[self.coin]
 
-        # Check if we have opposing lots to close
-        # A buy closes SHORT lots; a sell closes LONG lots
-        needed_side_to_close = PositionSide.SHORT if is_buy else PositionSide.LONG
+        # Bestehende Lots schließen (Matching)
+        pnl_results, remaining_amount = self._close_opposing_lots(
+            record, incoming_amount, price, is_buy, active_lots
+        )
 
-        amount_to_process = incoming_amount
+        # Restbetrag als neues Lot eröffnen (Opening)
+        if remaining_amount > 0:
+            self._open_new_lot(record, remaining_amount, price, is_buy, active_lots)
 
-        # 1. Matching Logic (Closing positions)
-        while amount_to_process > 0 and active_lots:
-            # Check the side of the oldest/newest lot
-            # In LIFO, we always look at the last element (idx -1 means last element)
-            idx = -1 if self.method == "LIFO" else 0
-            current_lot = active_lots[idx]
-
-            if current_lot.side != needed_side_to_close:
-                # No more lots of the opposing side to close
-                break
-
-            # Calculate how much we can match
-            match_amount = min(amount_to_process, current_lot.remaining_amount)
-
-            local_pnl_results.append(
-                PnLResult(
-                    coin=self.coin,
-                    side=current_lot.side.name,
-                    open_datetime=current_lot.open_datetime,
-                    close_datetime=record.datetime,
-                    amount=match_amount,
-                    open_price=current_lot.open_price,
-                    close_price=price,
-                    currency=record.sell_currency if is_buy else record.buy_currency,
-                    pnl=self._calculate_pnl(
-                        current_lot.side, match_amount, current_lot.open_price, price
-                    ),
-                    method=self.method,
-                )
-            )
-
-            # Update lot and remaining amount
-            current_lot.remaining_amount -= match_amount
-            amount_to_process -= match_amount
-
-            # Remove empty lots
-            if current_lot.remaining_amount <= 0:
-                active_lots.pop(idx)
-
-        # 2. Opening Logic (If amount is left, we open a new lot)
-        if amount_to_process > 0:
-            new_side = PositionSide.LONG if is_buy else PositionSide.SHORT
-            new_lot = AssetLot(
-                coin=self.coin,
-                side=new_side,
-                open_datetime=record.datetime,
-                amount=amount_to_process,
-                remaining_amount=amount_to_process,
-                open_price=price,
-                currency=record.sell_currency if is_buy else record.buy_currency,
-            )
-            active_lots.append(new_lot)
-
-        return local_pnl_results
+        return pnl_results
 
     def _calculate_pnl(
         self, side: PositionSide, amount: Decimal, open_p: Decimal, close_p: Decimal
@@ -169,3 +109,85 @@ class PnLEngine:
                     )
                 )
         return reports
+
+    def _calculate_current_price(self, record, is_buy: bool):
+        return (
+            record.sell_amount / record.buy_amount
+            if is_buy
+            else record.buy_amount / record.sell_amount
+        )
+
+    def _close_opposing_lots(
+        self,
+        record: RawRecord,
+        amount: Decimal,
+        price: Decimal,
+        is_buy: bool,
+        active_lots: List[AssetLot],
+    ) -> Tuple[List[PnLResult], Decimal]:
+        """Sucht Gegenseiten und berechnet PnL."""
+        results = []
+        needed_side = PositionSide.SHORT if is_buy else PositionSide.LONG
+        amount_to_process = amount
+
+        while amount_to_process > 0 and active_lots:
+            idx = -1 if self.method == "LIFO" else 0
+            if active_lots[idx].side != needed_side:
+                break
+
+            current_lot = active_lots[idx]
+            match_amount = min(amount_to_process, current_lot.remaining_amount)
+
+            # PnL erzeugen
+            results.append(
+                self._create_pnl_result(record, current_lot, match_amount, price)
+            )
+
+            # Beträge reduzieren
+            current_lot.remaining_amount -= match_amount
+            amount_to_process -= match_amount
+
+            if current_lot.remaining_amount <= 0:
+                active_lots.pop(idx)
+
+        return results, amount_to_process
+
+    def _open_new_lot(
+        self,
+        record: RawRecord,
+        amount: Decimal,
+        price: Decimal,
+        is_buy: bool,
+        active_lots: List[AssetLot],
+    ) -> None:
+        """Erstellt ein neues AssetLot und fügt es der Liste hinzu."""
+        new_side = PositionSide.LONG if is_buy else PositionSide.SHORT
+        new_lot = AssetLot(
+            coin=self.coin,
+            side=new_side,
+            open_datetime=record.datetime,
+            amount=amount,
+            remaining_amount=amount,
+            open_price=price,
+            currency=record.sell_currency if is_buy else record.buy_currency,
+        )
+        active_lots.append(new_lot)
+
+    def _create_pnl_result(
+        self, record: RawRecord, lot: AssetLot, amount: Decimal, close_price: Decimal
+    ) -> PnLResult:
+        """Hilfsmethode zur Kapselung der PnLResult-Erstellung."""
+        return PnLResult(
+            coin=self.coin,
+            side=lot.side,  # Wir speichern das Enum-Objekt
+            open_datetime=lot.open_datetime,
+            close_datetime=record.datetime,
+            amount=amount,
+            open_price=lot.open_price,
+            close_price=close_price,
+            currency=record.sell_currency
+            if record.buy_currency == self.coin
+            else record.buy_currency,
+            pnl=self._calculate_pnl(lot.side, amount, lot.open_price, close_price),
+            method=self.method,
+        )
