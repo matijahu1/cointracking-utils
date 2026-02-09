@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple
 
 from common.models.records import PnLResult
 
-from .pnl_models import AssetLot, OpenLotExport, PositionSide
+from .pnl_models import AssetLot, OpenLot, PositionSide
 
 
 class PnLEngine:
@@ -16,7 +16,7 @@ class PnLEngine:
         self.open_lots: Dict[str, List[AssetLot]] = {}
         self.pnl_results: List[PnLResult] = []
 
-    def calculate(self, records: list) -> Tuple[List[PnLResult], List[OpenLotExport]]:
+    def calculate(self, records: list) -> Tuple[List[PnLResult], List[OpenLot]]:
         """
         Processes all records chronologically.
         Includes guard clauses for robustness and handles fees.
@@ -36,13 +36,27 @@ class PnLEngine:
             if record.type != "Trade":
                 continue
 
-            self._process_trade(record)
+            new_pnl_events = self._match_trade_against_lots(record)
+            self.pnl_results.extend(new_pnl_events)
 
         return self.pnl_results, self._get_all_open_lots()
 
-    def _process_trade(self, record):
+    def _match_trade_against_lots(self, record) -> list[PnLResult]:
         """
-        Determines if a trade opens a new lot or closes existing ones.
+        Matches a trade record against current open lots to determine PnL.
+
+        This method implements the core matching logic:
+        1. It identifies if the trade closes existing positions (Short vs. Long).
+        2. It updates 'self.open_lots' by consuming matched lots or adding new ones.
+        3. It calculates PnL for every closed lot (or partial lot).
+
+        Args:
+            record: The trade record to be processed.
+
+        Returns:
+            A list of PnLResult objects for each lot that was closed during
+            this trade. Returns an empty list if no lots were closed (e.g.,
+            when only opening a new position).
         """
 
         # Determine the direction of this specific trade
@@ -55,6 +69,9 @@ class PnLEngine:
             if is_buy
             else record.buy_amount / record.sell_amount
         )
+
+        # Sammel-Liste für diesen Aufruf initialisieren
+        local_pnl_results: list[PnLResult] = []
 
         if self.coin not in self.open_lots:
             self.open_lots[self.coin] = []
@@ -81,8 +98,7 @@ class PnLEngine:
             # Calculate how much we can match
             match_amount = min(amount_to_process, current_lot.remaining_amount)
 
-            # Create PnL Result
-            self.pnl_results.append(
+            local_pnl_results.append(
                 PnLResult(
                     coin=self.coin,
                     side=current_lot.side.name,
@@ -121,6 +137,8 @@ class PnLEngine:
             )
             active_lots.append(new_lot)
 
+        return local_pnl_results
+
     def _calculate_pnl(
         self, side: PositionSide, amount: Decimal, open_p: Decimal, close_p: Decimal
     ) -> Decimal:
@@ -134,13 +152,13 @@ class PnLEngine:
         else:
             return (open_p - close_p) * amount
 
-    def _get_all_open_lots(self) -> List[OpenLotExport]:
+    def _get_all_open_lots(self) -> List[OpenLot]:
         """Collects remaining lots for the secondary CSV report."""
         reports = []
         for coin, lots in self.open_lots.items():
             for lot in lots:
                 reports.append(
-                    OpenLotExport(
+                    OpenLot(
                         coin=coin,
                         side=lot.side.name,
                         open_datetime=lot.open_datetime,

@@ -34,7 +34,7 @@ class AssetLot:
 
 
 @dataclass
-class OpenLotExport:
+class OpenLot:
     """
     Represents an unclosed position (Long or Short) for CSV export.
     """

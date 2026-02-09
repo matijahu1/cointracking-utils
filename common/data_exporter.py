@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Sequence
 
 from common.models.records import PnLResult, RawRecord, TargetRecord
+from pnl_tool.pnl_models import OpenLot
 
 
 class DataExporter:
@@ -76,6 +77,19 @@ class DataExporter:
             "Currency",
             "PnL",
             "Method",
+        ]
+        self._save(path, header, records)
+
+    def save_open_lots(self, path: Path, records: Sequence[OpenLot]) -> None:
+        """Saves the OpenLots to a CSV file matching the dataclass structure."""
+        header = [
+            "Coin",
+            "Side",
+            "Open Date",
+            "Rem. Amount",
+            "Open Price",
+            "Currency",
+            "Value",
         ]
         self._save(path, header, records)
 
