@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -122,7 +122,7 @@ class BaseAggregator:
             return True
 
         return False
-    
+
     @staticmethod
     def _set_time(date_value: datetime, new_time: str) -> datetime:
         """
@@ -159,7 +159,7 @@ class CoinTrackingAggregator(BaseAggregator):
             and BaseAggregator.values_equal(current_line.group, next_line.group)
             and BaseAggregator.values_equal(current_line.comment, next_line.comment)
             and BaseAggregator.values_equal(
-                current_line.date.date(), next_line.date.date()
+                current_line.datetime.date(), next_line.datetime.date()
             )  # nur Datum vergleichen
         ):
             return True
@@ -175,19 +175,19 @@ class CoinTrackingAggregator(BaseAggregator):
         - Coin buys are set to 23:55:00
         - Coin sells are set to 23:56:00
         """
-        
-        if record.type == "Deposit":
-            new_date = BaseAggregator._set_time(record.date, "00:01:00")
-            return replace(record, date=new_date)
 
-        if record.type == "Trade": 
+        if record.type == "Deposit":
+            new_datetime = BaseAggregator._set_time(record.datetime, "00:01:00")
+            return replace(record, datetime=new_datetime)
+
+        if record.type == "Trade":
             if self._is_coin_buy(record):
-                new_date = BaseAggregator._set_time(record.date, "23:55:00")
-                return replace(record, date=new_date)
+                new_datetime = BaseAggregator._set_time(record.datetime, "23:55:00")
+                return replace(record, datetime=new_datetime)
             if self._is_coin_sell(record):
-                new_date = BaseAggregator._set_time(record.date, "23:56:00")
-                return replace(record, date=new_date)
-            
+                new_datetime = BaseAggregator._set_time(record.datetime, "23:56:00")
+                return replace(record, datetime=new_datetime)
+
         # Default: no change
         return record
 
@@ -195,11 +195,11 @@ class CoinTrackingAggregator(BaseAggregator):
         """
         Adjust the timestamp of a record based on its business meaning.
 
-        Rules:         
-        - Margin Profit: 00:01:00 
+        Rules:
+        - Margin Profit: 00:01:00
         - deactivated: Margin Fee: +1 min (except the old time is 23:59)
         """
-                  
+
         # Margin Fee: +1 Minute (Limit 23:59)
         # if record.type == "Margin Fee":
         #     if record.date.hour == 23 and record.date.minute == 59:
@@ -209,17 +209,17 @@ class CoinTrackingAggregator(BaseAggregator):
 
         # Margin Profit: -1 Minute (Limit 00:00)
         if record.type == "Margin Profit":
-            new_date = BaseAggregator._set_time(record.date, "00:01:00")            
-            return replace(record, date=new_date)
+            new_datetime = BaseAggregator._set_time(record.datetime, "00:01:00")
+            return replace(record, datetime=new_datetime)
 
         # Default: no change
         return record
-    
+
     def _sort_result(self, records: list[RawRecord]) -> list[RawRecord]:
         """
         Sort records chronologically by date.
         """
-        return sorted(records, key=lambda r: r.date)
+        return sorted(records, key=lambda r: r.datetime)
 
     def aggregate_lines(self, records: list[RawRecord]) -> list[RawRecord]:
         """
@@ -261,9 +261,9 @@ class CoinTrackingAggregator(BaseAggregator):
                     aggr_buy = Decimal("0")
                     aggr_sell = Decimal("0")
                     aggr_fee = Decimal("0")
-                    aggr_count = 1    
-                                    
-                current = self._adjust_margin_timestamp( current )
+                    aggr_count = 1
+
+                current = self._adjust_margin_timestamp(current)
                 result.append(current)
                 aggregation_happened = False
 
@@ -276,7 +276,7 @@ class CoinTrackingAggregator(BaseAggregator):
                 last, aggr_buy, aggr_sell, aggr_fee, aggr_count
             )
 
-        last = self._adjust_margin_timestamp( last )
+        last = self._adjust_margin_timestamp(last)
         result.append(last)
 
         return self._sort_result(result)
