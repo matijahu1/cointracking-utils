@@ -62,7 +62,7 @@ def sort_records_for_aggregation(records: list[RawRecord]) -> None:
             r.buy_currency,
             r.sell_currency,
             r.fee_currency,
-            r.date,
+            r.datetime,
         )
     )
 
@@ -72,6 +72,6 @@ def sort_records_for_calculation(records: list[RawRecord]) -> None:
     records.sort(
         key=lambda r: (
             r.exchange,
-            r.date,
+            r.datetime,
         )
     )

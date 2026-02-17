@@ -35,7 +35,7 @@ class DataImporter:
                 continue
 
             # Year filter
-            if self.ct_year and str(r.date.year) != self.ct_year:
+            if self.ct_year and str(r.datetime.year) != self.ct_year:
                 continue
 
             # Coin filter
