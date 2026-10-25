@@ -55,6 +55,17 @@ class Config:
         path_str = self.config_data.get("export_file", "")
         return Path(path_str)
 
+    def get_remove_matching_transfer_pairs(self) -> bool:
+        value = self.config_data.get("remove_matching_transfer_pairs", False)
+        if not isinstance(value, bool):
+            raise ValueError("Config value 'remove_matching_transfer_pairs' must be a boolean")
+        return value
+
+    def get_removed_transfer_pairs_file(self) -> Path:
+        """Derive the audit CSV path from the aggregation export path."""
+        path = self.get_export_file()
+        return path.with_name(f"{path.stem}-removed-transfer-pairs.csv")
+
     def get_pnl_export_file(self) -> Path:
         """
         Returns the export file path as a Path object.
