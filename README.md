@@ -58,6 +58,19 @@ The utilities are organized into three main modules:
 3. **Filter by Year:** In `config.json`, set your desired year or leave it empty (`""`) to process all available data.
 4. **Reference CSV:** Enter the exact name of your exported CoinTracking CSV file in the `config.json`.
 
+For the Aggregation Tool, optionally set `"remove_matching_transfer_pairs": true`
+in `aggregation_tool/data/config.json`. The default is `false` when omitted.
+Before daily aggregation, this removes one-to-one `Deposit`/`Withdrawal` pairs
+within the same calendar minute, with exactly the same exchange, currency and amount.
+Only positive, fee-free, single-sided transfers with nonempty exchange and
+currency qualify. Comments, groups and transaction IDs may differ. Unmatched
+records continue through normal aggregation; cross-exchange transfers remain.
+
+Removed original rows are saved separately next to the export: for
+`Bybit-aggr.csv`, the audit file is `Bybit-aggr-removed-transfer-pairs.csv`.
+The tool reports the number of removed pairs. Each enabled run replaces the
+audit file, including a header-only file when no pairs match.
+
 ---
 
 ## 🚀 Execution
