@@ -61,7 +61,7 @@ The utilities are organized into three main modules:
 For the Aggregation Tool, optionally set `"remove_matching_transfer_pairs": true`
 in `aggregation_tool/data/config.json`. The default is `false` when omitted.
 Before daily aggregation, this removes one-to-one `Deposit`/`Withdrawal` pairs
-with exactly the same original timestamp, exchange, currency and amount.
+within the same calendar minute, with exactly the same exchange, currency and amount.
 Only positive, fee-free, single-sided transfers with nonempty exchange and
 currency qualify. Comments, groups and transaction IDs may differ. Unmatched
 records continue through normal aggregation; cross-exchange transfers remain.

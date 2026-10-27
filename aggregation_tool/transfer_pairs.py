@@ -8,7 +8,8 @@ def remove_matching_transfer_pairs(
 ) -> tuple[list[RawRecord], list[RawRecord]]:
     """Remove one-to-one Deposit/Withdrawal pairs before daily aggregation.
 
-    Match exact original timestamps, exchanges, currencies and Decimal amounts.
+    Match timestamps within the same calendar minute, with exact exchanges,
+    currencies and Decimal amounts.
     Only positive, fee-free, single-sided transfers with a known exchange and
     currency qualify. Group, comment and transaction IDs need not match.
     Both returned lists retain input order and the original records.
@@ -29,7 +30,8 @@ def remove_matching_transfer_pairs(
         if amount <= 0 or not currency:
             continue
 
-        key = (record.datetime, record.exchange, currency, amount)
+        minute = record.datetime.replace(second=0, microsecond=0)
+        key = (minute, record.exchange, currency, amount)
         matches = pending[(opposite, key)]
         if matches:
             removed_indices.update((matches.popleft(), index))

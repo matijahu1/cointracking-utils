@@ -44,7 +44,7 @@ def test_pairs_are_removed_once_and_original_records_preserved(reverse):
 
 
 @pytest.mark.parametrize("changes", [
-    {"datetime": deposit().datetime + timedelta(seconds=1)},
+    {"datetime": deposit().datetime + timedelta(minutes=1)},
     {"exchange": "Kraken"}, {"sell_currency": "ETH"},
     {"sell_amount": Decimal("1.2500000001")},
     {"fee_amount": Decimal("0.01")}, {"buy_amount": Decimal("1")},
@@ -54,6 +54,29 @@ def test_near_matches_are_retained(changes):
     records = [deposit(), replace(withdrawal(), **changes)]
     remaining, removed = remove_matching_transfer_pairs(records)
     assert len(remaining) == 2
+    assert removed == []
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_pairs_with_different_seconds_in_same_minute_are_removed(reverse):
+    records = [
+        replace(deposit(), datetime=deposit().datetime + timedelta(microseconds=1)),
+        replace(withdrawal(), datetime=deposit().datetime + timedelta(seconds=59, microseconds=999999)),
+    ]
+    if reverse:
+        records.reverse()
+    remaining, removed = remove_matching_transfer_pairs(records)
+    assert remaining == []
+    assert removed == records
+
+
+def test_pairs_across_minute_boundary_are_retained():
+    records = [
+        replace(deposit(), datetime=deposit().datetime + timedelta(seconds=59)),
+        replace(withdrawal(), datetime=deposit().datetime + timedelta(minutes=1)),
+    ]
+    remaining, removed = remove_matching_transfer_pairs(records)
+    assert remaining == records
     assert removed == []
 
 
